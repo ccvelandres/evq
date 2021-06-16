@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "evq_sample",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/evq_sample",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "preLaunchTask": "build"
+        },
+        {
+            "name": "(valgrind) evq_sample",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/evq_sample",
+            "targetArchitecture": "x64",
+            "customLaunchSetupCommands": [
+                {
+                    "description": "attach to valgrind",
+                    "text": "target remote | /usr/lib/valgrind/../../bin/vgdb"
+                }
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder}/build"
+        },
+        {
+            "name": "test_evq",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/test_evq",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "preLaunchTask": "build"
+        }
+    ]
+}

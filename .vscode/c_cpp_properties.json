@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "evq",
+            "includePath": [
+                "${workspaceFolder}/",
+                "${workspaceFolder}/build/",
+                "${workspaceFolder}/src/include/",
+                "${workspaceFolder}/src/include/evq",
+                "${workspaceFolder}/build/_deps/googletest-src/googletest/include",
+                "${workspaceFolder}/build/_deps/googletest-src/googlemock/include"
+            ],
+            "defines": [
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
