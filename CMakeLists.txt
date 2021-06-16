@@ -18,6 +18,7 @@ endmacro()
 
 # Set default values for config
 evq_set_default(EVQ_RTOS_SUPPORT ON)
+evq_set_default(EVQ_BUILD_EXAMPLES ÖN)
 evq_set_default(EVQ_BUILD_DOCS ÖN)
 evq_set_default(EVQ_BUILD_TESTS ÖN)
 evq_set_default(EVQ_LOGGING ÖN)
@@ -85,13 +86,6 @@ if(EVQ_BUILD_DOCS AND DOXYGEN_FOUND)
         ${PROJECT_SOURCE_DIR}/include/)
 endif()
 
-add_executable(evq_sample 
-    ${CMAKE_CURRENT_LIST_DIR}/example/sample_1.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_egroup.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_memory.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_mutex.cpp
-    # ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_queue.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_time.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/port/linux/evq_port_log.cpp)
-target_link_libraries(evq_sample PUBLIC evq)
-
+if(EVQ_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()

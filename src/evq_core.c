@@ -711,11 +711,6 @@ evq_status_t evq_post_event(evq_handle_t handle, evq_id_t evtId)
         {
             EVQ_LOG_TRACE("Could not send event post message to core\n");
         }
-        else
-        {
-            // release handle from user on success
-            *handle = NULL;
-        }
     }
 
     return st;
