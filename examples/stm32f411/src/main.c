@@ -58,7 +58,7 @@ void evqClientTaskFunction_1(void *pxArg)
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);
-    configASSERT(st = EVQ_ERROR_NONE);
+    configASSERT(st == EVQ_ERROR_NONE);
 
     while (1)
     {
@@ -79,10 +79,11 @@ void evqClientTaskFunction_1(void *pxArg)
         }
 
         msgCount++;
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 
     st = evq_handle_unregister(handle);
+    configASSERT(st == EVQ_ERROR_NONE);
 }
 
 void evqClientTaskFunction_2(void *pxArg)
@@ -95,16 +96,16 @@ void evqClientTaskFunction_2(void *pxArg)
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);
-    configASSERT(st = EVQ_ERROR_NONE);
+    configASSERT(st == EVQ_ERROR_NONE);
 
     while (1)
     {
         evq_message_t msg = NULL;
 
-        st = evq_receive(handle, &msg, 5);
+        st = evq_receive(handle, &msg, EVQ_TIMEOUT_MAX);
         if (EVQ_ERROR_NONE == st)
         {
-            EVQ_LOG_INFO("evq_message received: %u\n", msg->msgId);
+            EVQ_LOG_DEBUG("evq_message received from %x: %u\n", msg->srcId, msg->msgId);
 
             // destroy message after use
             evq_message_destroy(msg);
@@ -112,6 +113,7 @@ void evqClientTaskFunction_2(void *pxArg)
     }
 
     st = evq_handle_unregister(handle);
+    configASSERT(st == EVQ_ERROR_NONE);
 }
 
 void evqClientTaskFunction_3(void *pxArg)
@@ -124,15 +126,32 @@ void evqClientTaskFunction_3(void *pxArg)
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);
-    configASSERT(st = EVQ_ERROR_NONE);
+    configASSERT(st == EVQ_ERROR_NONE);
 
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(10));
+        static uint32_t msgCount = 0;
+        static uint32_t msgSent  = 0;
+
+        evq_message_t msg = NULL;
+        evq_message_allocate(&msg, 0);
+
+        st = evq_send(handle, evqClientHandleId_2, msgCount, msg);
+        if (EVQ_ERROR_NONE == st)
+        {
+            msgSent++;
+        }
+        else
+        {
+            EVQ_LOG_ERROR("DIRECT: Error(0x%X) sending %d\n", st, msgCount);
+        }
+
+        msgCount++;
+        vTaskDelay(pdMS_TO_TICKS(600));
     }
 
     st = evq_handle_unregister(handle);
-    configASSERT(st = EVQ_ERROR_NONE);
+    configASSERT(st == EVQ_ERROR_NONE);
 }
 
 void evqCoreTaskFunction(void *pxArg)
@@ -144,38 +163,38 @@ int main(void)
 {
     setupBoard();
 
-    // evq_status_t st = evq_init();
-    // configASSERT(st == EVQ_ERROR_NONE);
+    evq_status_t st = evq_init();
+    configASSERT(st == EVQ_ERROR_NONE);
 
-    // evqClientTaskHandle_1 = xTaskCreateStatic(evqClientTaskFunction_1,
-    //                                           "evqClientTaskFunction_1",
-    //                                           CLIENT_STACK_SIZE,
-    //                                           NULL,
-    //                                           configMAX_PRIORITIES - 3,
-    //                                           evqClientStack_1,
-    //                                           &evqClientTaskBuffer_1);
-    // evqClientTaskHandle_2 = xTaskCreateStatic(evqClientTaskFunction_2,
-    //                                           "evqClientTaskFunction_2",
-    //                                           CLIENT_STACK_SIZE,
-    //                                           NULL,
-    //                                           configMAX_PRIORITIES - 3,
-    //                                           evqClientStack_2,
-    //                                           &evqClientTaskBuffer_2);
-    // evqClientTaskHandle_3 = xTaskCreateStatic(evqClientTaskFunction_3,
-    //                                           "evqClientTaskFunction_3",
-    //                                           CLIENT_STACK_SIZE,
-    //                                           NULL,
-    //                                           configMAX_PRIORITIES - 3,
-    //                                           evqClientStack_3,
-    //                                           &evqClientTaskBuffer_3);
+    evqClientTaskHandle_1 = xTaskCreateStatic(evqClientTaskFunction_1,
+                                              "evqClientTaskFunction_1",
+                                              CLIENT_STACK_SIZE,
+                                              NULL,
+                                              configMAX_PRIORITIES - 3,
+                                              evqClientStack_1,
+                                              &evqClientTaskBuffer_1);
+    evqClientTaskHandle_2 = xTaskCreateStatic(evqClientTaskFunction_2,
+                                              "evqClientTaskFunction_2",
+                                              CLIENT_STACK_SIZE,
+                                              NULL,
+                                              configMAX_PRIORITIES - 3,
+                                              evqClientStack_2,
+                                              &evqClientTaskBuffer_2);
+    evqClientTaskHandle_3 = xTaskCreateStatic(evqClientTaskFunction_3,
+                                              "evqClientTaskFunction_3",
+                                              CLIENT_STACK_SIZE,
+                                              NULL,
+                                              configMAX_PRIORITIES - 3,
+                                              evqClientStack_3,
+                                              &evqClientTaskBuffer_3);
 
-    // evqCoreTaskHandle = xTaskCreateStatic(evqCoreTaskFunction,
-    //                                       "evqCoreTaskFunction",
-    //                                       CLIENT_STACK_SIZE,
-    //                                       NULL,
-    //                                       configMAX_PRIORITIES - 3,
-    //                                       evqCoreStack,
-    //                                       &evqCoreTaskBuffer);
+    evqCoreTaskHandle = xTaskCreateStatic(evqCoreTaskFunction,
+                                          "evqCoreTaskFunction",
+                                          CLIENT_STACK_SIZE,
+                                          NULL,
+                                          configMAX_PRIORITIES - 3,
+                                          evqCoreStack,
+                                          &evqCoreTaskBuffer);
 
     // Start scheduler
     vTaskStartScheduler();
