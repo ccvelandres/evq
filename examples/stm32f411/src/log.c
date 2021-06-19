@@ -7,8 +7,6 @@
 
 #include "usb.h"
 
-#include <evq/evq_port.h>
-
 QueueHandle_t queueHandle;
 
 typedef struct
