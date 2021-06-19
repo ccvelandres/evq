@@ -5,6 +5,10 @@
 #include <task.h>
 #include <queue.h>
 
+#include "usb.h"
+
+#include <evq/evq_port.h>
+
 QueueHandle_t queueHandle;
 
 typedef struct
@@ -25,6 +29,7 @@ void logTaskFunction(void *pxArg)
             usb_serial_write(msg.data, msg.len);
             free(msg.data);
         }
+        vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
 
@@ -41,11 +46,11 @@ void th_log(const char *str, uint32_t len)
 }
 
 // evq flush log port
-void evq_flush_log(const char *str, uint32_t len) { log(str, len); }
+void evq_flush_log(const char *str, uint32_t len) { th_log(str, len); }
 
 void setupLog(void)
 {
     static TaskHandle_t logTaskHandle;
-    queueHandle = xQueueCreate(8, sizeof(logMessage));
+    queueHandle = xQueueCreate(64, sizeof(logMessage));
     xTaskCreate(logTaskFunction, "thread_2", 256, NULL, configMAX_PRIORITIES - 1, &logTaskHandle);
 }

@@ -133,11 +133,16 @@ void setupUsb(void)
     OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 }
 
-void usb_serial_write(const void *data, const uint16_t len)
+void usb_serial_write(const char *data, const uint16_t len)
 {
-    if (usb_ready_tx) usbd_ep_write_packet(usb_dev, CFG_USB_SERIAL_ENDPOINT, data, len);
+    int ret = 0;
+    if (usb_ready_tx)
+    {
+        ret = usbd_ep_write_packet(usb_dev, CFG_USB_SERIAL_ENDPOINT, data, len);
+        configASSERT(len == ret);
+    }
 }
 
 void otg_fs_isr(void) { usbd_poll(usb_dev); }
 
-bool usb_serial_ready(void) {return usb_ready_tx; }
+bool usb_serial_ready(void) { return usb_ready_tx; }

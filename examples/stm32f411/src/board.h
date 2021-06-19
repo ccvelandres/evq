@@ -27,5 +27,10 @@ void setupUsb(void);
 */
 void setupLog(void);
 
+/**
+ * Setup heartbeat task
+*/
+void setupHeartbeat(void);
+
 /** threadsafe logging call */
 void th_log(const char *str, uint32_t len);

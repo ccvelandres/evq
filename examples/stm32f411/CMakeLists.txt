@@ -36,6 +36,8 @@ target_link_options(libopencm3_stm32f4 INTERFACE
     -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -MD -DSTM32F4 -nostartfiles)
 add_dependencies(libopencm3_stm32f4 libopencm3)
 
+# link_libraries(libopencm3_stm32f4)
+
 #########################################################################
 # FreeRTOS-Kernel
 FetchContent_Declare(freertos_kernel
@@ -67,27 +69,43 @@ target_include_directories(freertos_kernel_cm4 PRIVATE
 target_link_libraries(freertos_kernel_cm4 PRIVATE libopencm3_stm32f4)
 
 #########################################################################
-# evqueue_stm32f411
-add_executable(evqueue_stm32f411
+# evq_example_stm32f411
+set(EVQ_BUILD_TESTS OFF)
+set(EVQ_BUILD_DOCS OFF)
+set(EVQ_BUILD_EXAMPLES OFF)
+set(EVQ_LOG_LEVEL 6)
+set(EVQ_LOG_LEVEL_MAX 6)
+set(EVQ_CORE_TIMEOUT EVQ_TIMEOUT_MAX)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../ ${CMAKE_CURRENT_BINARY_DIR}/_deps/evq)
+target_link_libraries(evq PRIVATE libopencm3_stm32f4)
+
+#########################################################################
+# evq_example_stm32f411
+add_executable(evq_example_stm32f411
     ${CMAKE_CURRENT_LIST_DIR}/src/main.c
     ${CMAKE_CURRENT_LIST_DIR}/src/usb.c
     ${CMAKE_CURRENT_LIST_DIR}/src/log.c
     ${CMAKE_CURRENT_LIST_DIR}/src/freertos_hooks.c
     ${CMAKE_CURRENT_LIST_DIR}/src/retarget.c
-    ${CMAKE_CURRENT_LIST_DIR}/src/board.c)
-target_link_libraries(evqueue_stm32f411 PRIVATE 
+    ${CMAKE_CURRENT_LIST_DIR}/src/board.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_egroup.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_memory.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_mutex.c
+        )
+target_link_libraries(evq_example_stm32f411 PRIVATE 
     libopencm3_stm32f4
-    freertos_kernel_cm4)
-    target_include_directories(evqueue_stm32f411 PRIVATE
+    freertos_kernel_cm4
+    evq)
+    target_include_directories(evq_example_stm32f411 PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src)
-target_link_options(evqueue_stm32f411 PRIVATE 
+target_link_options(evq_example_stm32f411 PRIVATE 
     -T${CMAKE_CURRENT_LIST_DIR}/stm32f411ce.ld
-    -Xlinker -Map=$<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.map)
+    -Xlinker -Map=$<TARGET_FILE_DIR:evq_example_stm32f411>/$<TARGET_FILE_BASE_NAME:evq_example_stm32f411>.map)
 
 # Generate binary files
-add_custom_command(TARGET evqueue_stm32f411 POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:evqueue_stm32f411> $<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.bin)
+add_custom_command(TARGET evq_example_stm32f411 POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:evq_example_stm32f411> $<TARGET_FILE_DIR:evq_example_stm32f411>/$<TARGET_FILE_BASE_NAME:evq_example_stm32f411>.bin)
 
 # Generate disassembly of executable
-add_custom_command(TARGET evqueue_stm32f411 POST_BUILD
-    COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:evqueue_stm32f411> > $<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.asm)
+add_custom_command(TARGET evq_example_stm32f411 POST_BUILD
+    COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:evq_example_stm32f411> > $<TARGET_FILE_DIR:evq_example_stm32f411>/$<TARGET_FILE_BASE_NAME:evq_example_stm32f411>.asm)
