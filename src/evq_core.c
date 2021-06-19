@@ -36,7 +36,7 @@ typedef struct
 
 // static_assert(sizeof(evq_handle_priv_t) != sizeof(evq_static_handle_t),
 //               "Mismatched static buffer size for evq_handle_t");
-static_assert(EVQ_MAX_HANDLES < UINT16_MAX, "EVQ_MAX_HANDLES cannot exceed UINT16_MAX");
+// static_assert(EVQ_MAX_HANDLES < UINT16_MAX, "EVQ_MAX_HANDLES cannot exceed UINT16_MAX");
 
 ////////////////////////////////////////////////////////////////////
 // Private Variables

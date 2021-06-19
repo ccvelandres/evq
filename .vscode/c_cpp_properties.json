@@ -26,7 +26,6 @@
                 "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/portable/GCC/ARM_CM4F",
                 "${workspaceFolder}/build/",
                 "${workspaceFolder}/src/include/",
-                "${workspaceFolder}/src/include/evq",
             ],
             "defines": [
                 "STM32F4"

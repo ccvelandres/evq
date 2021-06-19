@@ -8,11 +8,10 @@
 #include <task.h>
 #include <queue.h>
 
+#include <evq/evq_core.h>
+
 #include "board.h"
 #include "usb.h"
-
-/** Task Configuration */
-#define TASK1_STACK_SIZE 1024
 
 static void threadFunction(void *pxArg)
 {
@@ -24,15 +23,10 @@ static void threadFunction(void *pxArg)
     }
 }
 
-static void setupTasks(void)
+static void setupHeartbeat(void)
 {
     static TaskHandle_t taskHandle_1;
-    xTaskCreate(threadFunction,
-                "thread_1",
-                TASK1_STACK_SIZE,
-                NULL,
-                configMAX_PRIORITIES - 1,
-                &taskHandle_1);
+    xTaskCreate(threadFunction, "thread_1", 128, NULL, configMAX_PRIORITIES - 1, &taskHandle_1);
 }
 
 int main(void)
@@ -40,11 +34,13 @@ int main(void)
     setupClocks();
     setupGpio();
     setupUsb();
-    setupTasks();
+    setupHeartbeat();
     setupLog();
 
     while (!usb_serial_ready())
         ;
+
+    evq_init();
 
     // Start scheduler
     vTaskStartScheduler();

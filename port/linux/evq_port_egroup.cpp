@@ -96,12 +96,3 @@ extern "C" evq_status_t evq_egroup_wait(evq_egroup_t egroup,
     } while (std::chrono::system_clock::now() < timeoutMs);
     return EVQ_ERROR_TIMEOUT;
 }
-
-extern "C" evq_status_t evq_egroup_wait_isr(evq_egroup_t egroup,
-                                            uint32_t     flags,
-                                            uint32_t    *matchFlag,
-                                            bool         waitForAll,
-                                            uint32_t     timeout)
-{
-    return evq_egroup_wait(egroup, flags, matchFlag, waitForAll, timeout);
-}

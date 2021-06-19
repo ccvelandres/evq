@@ -10,7 +10,7 @@ endif()
 
 set(EVQ_CONFIG_LIST "")
 macro(evq_set_default opt value)
-    if(NOT ${opt})
+    if(NOT DEFINED ${opt})
         set(${opt} ${value})
     endif()
     list(APPEND EVQ_CONFIG_LIST "${opt}")
@@ -78,8 +78,8 @@ if(EVQ_BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-find_package(Doxygen QUIET REQUIRED dot)
 if(EVQ_BUILD_DOCS AND DOXYGEN_FOUND)
+    find_package(Doxygen QUIET REQUIRED dot)
     set(DOXYGEN_EXTRACT_ALL ON)
 
     doxygen_add_docs(evq_docs

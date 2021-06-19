@@ -48,7 +48,6 @@ extern "C"
     evq_status_t evq_egroup_set(evq_egroup_t egroup, uint32_t flags, uint32_t timeout);
     evq_status_t evq_egroup_set_isr(evq_egroup_t egroup, uint32_t flags, uint32_t timeout);
     evq_status_t evq_egroup_wait(evq_egroup_t egroup, uint32_t flags, uint32_t *matchFlag, bool waitForAll, uint32_t timeout);
-    evq_status_t evq_egroup_wait_isr(evq_egroup_t egroup, uint32_t flags, uint32_t *matchFlag, bool waitForAll, uint32_t timeout);
     /** @} */
 #endif // EVQ_RTOS_SUPPORT
 
