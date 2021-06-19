@@ -27,11 +27,10 @@ void logTaskFunction(void *pxArg)
             usb_serial_write(msg.data, msg.len);
             free(msg.data);
         }
-        vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
 
-void th_log(const char *str, uint32_t len)
+uint32_t th_log(const char *str, uint32_t len)
 {
     BaseType_t ret;
     logMessage msg = {.data = malloc(len), .len = len};
@@ -43,7 +42,9 @@ void th_log(const char *str, uint32_t len)
     if (pdTRUE != ret)
     {
         free(msg.data);
+        return 0;
     }
+    return len;
 }
 
 // evq flush log port

@@ -8,9 +8,9 @@
 
 /** this implements stubs for newlib */
 
-void _write(int fd, const char* ptr, uint32_t len)
+_ssize_t _write(int fd, const char* ptr, uint32_t len)
 {
-    th_log(ptr, len);
+    return th_log(ptr, len);
 }
 
 void __malloc_lock(struct _reent *r)

@@ -33,4 +33,4 @@ void setupLog(void);
 void setupHeartbeat(void);
 
 /** threadsafe logging call */
-void th_log(const char *str, uint32_t len);
+uint32_t th_log(const char *str, uint32_t len);
