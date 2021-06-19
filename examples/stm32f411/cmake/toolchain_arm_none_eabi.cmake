@@ -5,6 +5,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 # Target definition
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
+set(CMAKE_CROSSCOMPILING 1)
+
+# Set system dependent extensions
+if(WIN32)
+  set(TOOLCHAIN_EXT ".exe" )
+else()
+  set(TOOLCHAIN_EXT "" )
+endif()
 
 # Toolchain name
 set(TOOLCHAIN arm-none-eabi)
@@ -14,17 +22,21 @@ if($ENV{ARMGCC_DIR})
     set(TOOLCHAIN_PREFIX $ENV{ARMGCC_DIR})
 endif()
 
-# Set toolchain paths
-set(TOOLCHAIN_BIN_DIR "${TOOLCHAIN_PREFIX}/bin")
-set(TOOLCHAIN_INC_DIR "${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/include")
-set(TOOLCHAIN_LIB_DIR "${TOOLCHAIN_PREFIX}/${TOOLCHAIN}/lib")
+# Locate toolchain binaries
+find_program(CMAKE_C_COMPILER NAMES ${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} PATHS ${TOOLCHAIN_PREFIX}/ REQUIRED)
+find_program(CMAKE_CXX_COMPILER ${TOOLCHAIN}-g++${TOOLCHAIN_EXT} PATHS ${TOOLCHAIN_PREFIX}/ REQUIRED)
+find_program(CMAKE_ASM_COMPILER ${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} PATHS ${TOOLCHAIN_PREFIX}/ REQUIRED)
+find_program(CMAKE_OBJCOPY ${TOOLCHAIN}-objcopy${TOOLCHAIN_EXT} PATHS ${TOOLCHAIN_PREFIX}/ REQUIRED)
+find_program(CMAKE_SIZE ${TOOLCHAIN}-size${TOOLCHAIN_EXT} PATHS ${TOOLCHAIN_PREFIX}/ REQUIRED)
 
-# Set system dependent extensions
-if(WIN32)
-  set(TOOLCHAIN_EXT ".exe" )
-else()
-  set(TOOLCHAIN_EXT "" )
-endif()
+# Derive toolchain path from binaries
+get_filename_component(TOOLCHAIN_PATH "${CMAKE_C_COMPILER}" DIRECTORY)
+get_filename_component(TOOLCHAIN_PATH "${TOOLCHAIN_PATH}/.." ABSOLUTE)
+
+# Set toolchain paths
+set(TOOLCHAIN_BIN_DIR "${TOOLCHAIN_PATH}/bin")
+set(TOOLCHAIN_INC_DIR "${TOOLCHAIN_PATH}/${TOOLCHAIN}/include")
+set(TOOLCHAIN_LIB_DIR "${TOOLCHAIN_PATH}/${TOOLCHAIN}/lib")
 
 # Perform compiler test with static library
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
@@ -58,13 +70,6 @@ set(CMAKE_C_FLAGS_MINSIZEREL "-Os -flto" CACHE INTERNAL "C Compiler options for 
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -flto" CACHE INTERNAL "C++ Compiler options for minsize release build type")
 set(CMAKE_ASM_FLAGS_MINSIZEREL "" CACHE INTERNAL "ASM Compiler options for minsize release build type")
 set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-flto" CACHE INTERNAL "Linker options for minsize release build type")
-
-# Setup compilers
-set(CMAKE_C_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "C Compiler")
-set(CMAKE_CXX_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-g++${TOOLCHAIN_EXT} CACHE INTERNAL "C++ Compiler")
-set(CMAKE_ASM_COMPILER ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-gcc${TOOLCHAIN_EXT} CACHE INTERNAL "ASM Compiler")
-set(CMAKE_OBJCOPY ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-objcopy${TOOLCHAIN_EXT} CACHE INTERNAL "objcopy executable")
-set(CMAKE_SIZE ${TOOLCHAIN_BIN_DIR}/${TOOLCHAIN}-size${TOOLCHAIN_EXT} CACHE INTERNAL "size executable")
 
 set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_PREFIX}/${${TOOLCHAIN}} ${CMAKE_PREFIX_PATH})
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

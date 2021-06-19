@@ -2,23 +2,37 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 
-#define LED_RCC_PORT RCC_GPIOC
-#define LED_PORT GPIOC
-#define LED_PIN GPIO13
+#include <FreeRTOS.h>
+#include <task.h>
+
+#include "board.h"
+
+/** Task Configuration */
+#define TASK1_STACK_SIZE 1024
+
+void threadFunction(void *pxArg)
+{
+    while(1)
+    {
+        gpio_toggle(LED_PORT, LED_PIN);
+        vTaskDelay(200);
+    }
+}
+
+void setupTasks()
+{
+    BaseType_t ret;
+    static TaskHandle_t taskHandle_1;
+    xTaskCreate(threadFunction, "thread_1", TASK1_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, &taskHandle_1);
+}
 
 int main()
 {
-    rcc_periph_clock_enable(LED_RCC_PORT);
-    gpio_mode_setup(LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN);
+    setupClocks();
+    setupGpio();
+    setupTasks();
 
-    gpio_set(LED_PORT, LED_PIN);
-    
-
-    while(1)
-    {
-        for(int i = 0; i < 0xFFFF; ++i) __asm__("nop");
-        gpio_toggle(LED_PORT, LED_PIN);
-    }
-
+    // Start scheduler
+    vTaskStartScheduler();
     return 0;
 }

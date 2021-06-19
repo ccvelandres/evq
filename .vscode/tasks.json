@@ -74,6 +74,25 @@
             "presentation": {
                 "clear": true
             }
+        },
+        {
+            "label": "dfu-util-stm32f411",
+            "type": "shell",
+            "command": "dfu-util",
+            "args": [
+                "-a", "0",
+                "-d", "0483:df11",
+                "-s", "0x08000000:leave",
+                "-D", "build/evqueue_stm32f411.bin"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/examples/stm32f411"
+            },
+            "group": "none",
+            "presentation": {
+                "clear": true
+            },
+            "problemMatcher": []
         }
     ],
     "version": "2.0.0"

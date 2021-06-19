@@ -33,6 +33,18 @@
             "args": [],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "build"
+        },
+        {
+            "name": "example/stm32f411",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "com5",
+            "interface": "swd",
+            "powerOverBMP": "disable",
+            "svdFile": "${workspaceFolder}/examples/stm32f411/stm32f411.svd",
+            "executable": "${workspaceFolder}/examples/stm32f411/build/evqueue_stm32f411",
+            "cwd": "${workspaceFolder}/examples/stm32f411/",
         }
     ],"inputs": [
         {

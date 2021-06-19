@@ -22,6 +22,8 @@
             "includePath": [
                 "${workspaceFolder}/examples/stm32f411/src",
                 "${workspaceFolder}/examples/stm32f411/build/_deps/libopencm3-src/include",
+                "${workspaceFolder}/examples/stm32f411/build/_deps/freertos_kernel-src/include",
+                "${workspaceFolder}/examples/stm32f411/build/_deps/freertos_kernel-src/portable/GCC/ARM_CM4F",
                 "${workspaceFolder}/build/",
                 "${workspaceFolder}/src/include/",
                 "${workspaceFolder}/src/include/evq",
@@ -29,7 +31,7 @@
             "defines": [
                 "STM32F4"
             ],
-            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "compilerPath": "D:/msys64/ucrt64/bin/arm-none-eabi-gcc.exe",
             "cStandard": "c99",
             "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64"
