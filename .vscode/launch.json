@@ -5,7 +5,7 @@
             "name": "evq_sample",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/evq_sample",
+            "program": "${workspaceFolder}/build/examples/${input:sampleTarget}",
             "args": [],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "build"
@@ -33,6 +33,16 @@
             "args": [],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "build"
+        }
+    ],"inputs": [
+        {
+            "id": "sampleTarget",
+            "type": "pickString",
+            "description": "Pick sample target to run and debug",
+            "options": [
+                "evq_sample_direct"
+            ],
+            "default": "evq_sample_direct"
         }
     ]
 }
