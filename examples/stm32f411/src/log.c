@@ -39,16 +39,31 @@ void th_log(const char *str, uint32_t len)
 
     memcpy(msg.data, str, len);
 
-    ret = xQueueSend(queueHandle, &msg, pdMS_TO_TICKS(5));
-    if (pdTRUE != ret) free(msg.data);
+    ret = xQueueSend(queueHandle, &msg, 0);
+    if (pdTRUE != ret)
+    {
+        free(msg.data);
+    }
 }
 
 // evq flush log port
 void evq_flush_log(const char *str, uint32_t len) { th_log(str, len); }
 
+#define LOG_TASK_STACK_SIZE 1024
+static TaskHandle_t logTaskHandle_1;
+static StaticTask_t logTaskBuffer_1;
+static StackType_t  logStack_1[LOG_TASK_STACK_SIZE];
+
 void setupLog(void)
 {
     static TaskHandle_t logTaskHandle;
-    queueHandle = xQueueCreate(64, sizeof(logMessage));
-    xTaskCreate(logTaskFunction, "thread_2", 256, NULL, configMAX_PRIORITIES - 1, &logTaskHandle);
+    queueHandle   = xQueueCreate(64, sizeof(logMessage));
+    logTaskHandle = xTaskCreateStatic(logTaskFunction,
+                                      "logTask",
+                                      LOG_TASK_STACK_SIZE,
+                                      NULL,
+                                      1,
+                                      logStack_1,
+                                      &logTaskBuffer_1);
+    (void)logTaskHandle;
 }
