@@ -8,7 +8,9 @@
             "description": "debug build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "EVQ_LOGGING": "ON"
+                "EVQ_LOGGING": "ON",
+                "EVQ_LOG_LEVEL": "6",
+                "EVQ_LOG_LEVEL_MAX": "6"
             }
         }
     ],
