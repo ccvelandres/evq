@@ -75,12 +75,12 @@ extern uint32_t rcc_ahb_frequency;
 // #define configMAX_API_CALL_INTERRUPT_PRIORITY   [dependent on processor and application]
 
 // /* Define to trap errors during development. */
-#define configASSERT(x)    \
-    if ((x) == 0)            \
-    {                        \
-        vTaskEndScheduler(); \
-        while (1)            \
-            ;                \
+#define configASSERT(x)       \
+    if ((x) == 0)             \
+    {                         \
+        vPortEnterCritical(); \
+        while (1)             \
+            ;                 \
     }
 
 // /* FreeRTOS MPU specific definitions. */
