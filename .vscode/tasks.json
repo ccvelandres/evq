@@ -5,10 +5,7 @@
             "type": "shell",
             "command": "cmake",
             "args": [
-                "-Bbuild",
-                "-DCMAKE_BUILD_TYPE=Debug",
-                "-DEVQ_LOG_LEVEL=6",
-                "-DEVQ_LOG_LEVEL_MAX=6"
+                "--preset=debug",
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
