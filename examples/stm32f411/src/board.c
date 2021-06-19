@@ -35,7 +35,6 @@ static void heartbeatFunction(void *pxArg)
 {
     while (1)
     {
-        printf("test\n");
         gpio_toggle(CFG_LED_PORT, CFG_LED_PIN);
         vTaskDelay(200);
     }

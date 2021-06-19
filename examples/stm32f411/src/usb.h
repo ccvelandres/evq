@@ -160,7 +160,7 @@ static const __attribute__((__used__)) char *usb_strings[] = {
 /**
  * Write data to usb serial endpoint
 */
-void usb_serial_write(const char *data, const uint16_t len);
+void usb_serial_write(char *data, uint32_t len);
 
 /** Returns whether serial console is connected */
 bool usb_serial_ready(void);

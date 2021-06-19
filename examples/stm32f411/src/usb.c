@@ -133,13 +133,31 @@ void setupUsb(void)
     OTG_FS_GCCFG &= ~(OTG_GCCFG_VBUSBSEN | OTG_GCCFG_VBUSASEN);
 }
 
-void usb_serial_write(const char *data, const uint16_t len)
+void usb_serial_write(char *data, uint32_t len)
 {
-    int ret = 0;
+    uint32_t ret = 0;
     if (usb_ready_tx)
     {
-        ret = usbd_ep_write_packet(usb_dev, CFG_USB_SERIAL_ENDPOINT, data, len);
-        configASSERT(len == ret);
+        if ((CFG_USB_EP_PACKET_SIZE / 2) < len)
+        {
+            uint32_t remainingBytes = len;
+            while (remainingBytes > 0)
+            {
+                uint32_t packetSize = remainingBytes > (CFG_USB_EP_PACKET_SIZE / 2)
+                                        ? (CFG_USB_EP_PACKET_SIZE / 2) - 1
+                                        : remainingBytes;
+
+                ret = usbd_ep_write_packet(usb_dev,
+                                           CFG_USB_SERIAL_ENDPOINT,
+                                           &data[len - remainingBytes],
+                                           packetSize);
+                remainingBytes -= ret;
+            }
+        }
+        else
+        {
+            ret = usbd_ep_write_packet(usb_dev, CFG_USB_SERIAL_ENDPOINT, data, len);
+        }
     }
 }
 
