@@ -9,8 +9,11 @@ include(FetchContent)
 #########################################################################
 # libopencm3
 FetchContent_Declare(libopencm3
+    SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/external/libopencm3"
     GIT_REPOSITORY "https://github.com/libopencm3/libopencm3.git"
     GIT_TAG cb0661f81de5b1cae52ca99c7b5985b678176db7
+    UPDATE_COMMAND ""
+    CONFIGURE_COMMAND ""
     )
 FetchContent_MakeAvailable(libopencm3)
 FetchContent_GetProperties(libopencm3)
@@ -36,9 +39,12 @@ add_dependencies(libopencm3_stm32f4 libopencm3)
 #########################################################################
 # FreeRTOS-Kernel
 FetchContent_Declare(freertos_kernel
+    SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/external/freertos_kernel"
     GIT_REPOSITORY "https://github.com/FreeRTOS/FreeRTOS-Kernel"
     GIT_TAG V10.4.4
-    GIT_SHALLOW ON)
+    GIT_SHALLOW ON
+    UPDATE_COMMAND ""
+    CONFIGURE_COMMAND "")
 FetchContent_MakeAvailable(freertos_kernel)
 FetchContent_GetProperties(freertos_kernel)
 
@@ -64,14 +70,24 @@ target_link_libraries(freertos_kernel_cm4 PRIVATE libopencm3_stm32f4)
 # evqueue_stm32f411
 add_executable(evqueue_stm32f411
     ${CMAKE_CURRENT_LIST_DIR}/src/main.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/usb.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/log.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/freertos_hooks.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/retarget.c
     ${CMAKE_CURRENT_LIST_DIR}/src/board.c)
 target_link_libraries(evqueue_stm32f411 PRIVATE 
     libopencm3_stm32f4
     freertos_kernel_cm4)
     target_include_directories(evqueue_stm32f411 PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src)
-target_link_options(evqueue_stm32f411 PRIVATE -T${CMAKE_CURRENT_LIST_DIR}/stm32f411ce.ld)
+target_link_options(evqueue_stm32f411 PRIVATE 
+    -T${CMAKE_CURRENT_LIST_DIR}/stm32f411ce.ld
+    -Xlinker -Map=$<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.map)
 
 # Generate binary files
 add_custom_command(TARGET evqueue_stm32f411 POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:evqueue_stm32f411> $<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.bin)
+
+# Generate disassembly of executable
+add_custom_command(TARGET evqueue_stm32f411 POST_BUILD
+    COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:evqueue_stm32f411> > $<TARGET_FILE_DIR:evqueue_stm32f411>/$<TARGET_FILE_BASE_NAME:evqueue_stm32f411>.asm)

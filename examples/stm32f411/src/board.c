@@ -13,50 +13,15 @@
  * APB2 Clock -> 84MHz --> high speed domain
  * 
 */
-#define CFG_RCC_PLLM (25)
-#define CFG_RCC_PLLN (336)
-#define CFG_RCC_PLLP (4)
-#define CFG_RCC_PLLQ (7)
-#define CFG_RCC_PLLR (0)
 
-void setupClocks()
+void setupClocks(void)
 {
-    // Use HSI for configuration
-    rcc_osc_on(RCC_HSI);
-    rcc_wait_for_osc_ready(RCC_HSI);
-    rcc_set_sysclk_source(RCC_CFGR_SW_HSI);
-
-    rcc_osc_on(RCC_HSE);
-    rcc_wait_for_osc_ready(RCC_HSE);
-
-    rcc_set_hpre(RCC_CFGR_HPRE_DIV_NONE);
-    rcc_set_ppre1(RCC_CFGR_PPRE_DIV_2);
-    rcc_set_ppre2(RCC_CFGR_PPRE_DIV_NONE);
-
-    rcc_osc_off(RCC_PLL);
-    rcc_set_main_pll_hse(CFG_RCC_PLLM, CFG_RCC_PLLN, CFG_RCC_PLLP, CFG_RCC_PLLQ, CFG_RCC_PLLR);
-    rcc_osc_on(RCC_PLL);
-    rcc_wait_for_osc_ready(RCC_PLL);
-
-    flash_icache_enable();
-    flash_dcache_enable();
-    flash_set_ws(FLASH_ACR_LATENCY_2WS | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
-
-    rcc_set_sysclk_source(RCC_CFGR_SW_PLL);
-    rcc_wait_for_sysclk_status(RCC_PLL);
-
-    // update frequency variables from libopencm3
-    rcc_ahb_frequency = 84000000;
-    rcc_apb1_frequency = 42000000;
-    rcc_apb2_frequency = 84000000;
-
-    rcc_osc_off(RCC_HSI);
-    rcc_osc_off(RCC_LSI);
+    rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
 }
 
-void setupGpio()
+void setupGpio(void)
 {
-    rcc_periph_clock_enable(LED_RCC_PORT);
-    gpio_mode_setup(LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_PIN);
-    gpio_set(LED_PORT, LED_PIN);
+    rcc_periph_clock_enable(CFG_LED_RCC_PORT);
+    gpio_mode_setup(CFG_LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, CFG_LED_PIN);
+    gpio_set(CFG_LED_PORT, CFG_LED_PIN);
 }

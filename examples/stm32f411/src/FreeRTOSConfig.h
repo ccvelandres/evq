@@ -6,7 +6,7 @@
 extern uint32_t rcc_ahb_frequency;
 
 #define configMINIMAL_STACK_SIZE        ((unsigned short) 128)
-#define configSYSTICK_CLOCK_HZ          (configCPU_CLOCK_HZ / 8) /* fix for vTaskDelay() */
+#define configSYSTICK_CLOCK_HZ          (configCPU_CLOCK_HZ / 8) /* fix for vTaskDelay(void) */
 #define configTICK_RATE_HZ              ((TickType_t) 1000)
 #define configTOTAL_HEAP_SIZE           ((size_t) 0x4000)
 #define configCPU_CLOCK_HZ              ((unsigned long) rcc_ahb_frequency)
@@ -41,7 +41,7 @@ extern uint32_t rcc_ahb_frequency;
 // #define configHEAP_CLEAR_MEMORY_ON_FREE         1
 
 // /* Memory allocation related definitions. */
-// #define configSUPPORT_STATIC_ALLOCATION             1
+#define configSUPPORT_STATIC_ALLOCATION             1
 #define configSUPPORT_DYNAMIC_ALLOCATION            1
 // #define configAPPLICATION_ALLOCATED_HEAP            1
 // #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP   1
@@ -101,7 +101,7 @@ extern uint32_t rcc_ahb_frequency;
 // #define INCLUDE_xTaskGetCurrentTaskHandle       1
 // #define INCLUDE_uxTaskGetStackHighWaterMark     0
 // #define INCLUDE_uxTaskGetStackHighWaterMark2    0
-// #define INCLUDE_xTaskGetIdleTaskHandle          0
+#define INCLUDE_xTaskGetIdleTaskHandle          0
 // #define INCLUDE_eTaskGetState                   0
 // #define INCLUDE_xEventGroupSetBitFromISR        1
 // #define INCLUDE_xTimerPendFunctionCall          0

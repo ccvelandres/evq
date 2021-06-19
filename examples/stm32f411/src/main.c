@@ -1,36 +1,50 @@
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <queue.h>
 
 #include "board.h"
+#include "usb.h"
 
 /** Task Configuration */
 #define TASK1_STACK_SIZE 1024
 
-void threadFunction(void *pxArg)
+static void threadFunction(void *pxArg)
 {
-    while(1)
+    while (1)
     {
-        gpio_toggle(LED_PORT, LED_PIN);
+        printf("lmao\n");
+        gpio_toggle(CFG_LED_PORT, CFG_LED_PIN);
         vTaskDelay(200);
     }
 }
 
-void setupTasks()
+static void setupTasks(void)
 {
-    BaseType_t ret;
     static TaskHandle_t taskHandle_1;
-    xTaskCreate(threadFunction, "thread_1", TASK1_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, &taskHandle_1);
+    xTaskCreate(threadFunction,
+                "thread_1",
+                TASK1_STACK_SIZE,
+                NULL,
+                configMAX_PRIORITIES - 1,
+                &taskHandle_1);
 }
 
-int main()
+int main(void)
 {
     setupClocks();
     setupGpio();
+    setupUsb();
     setupTasks();
+    setupLog();
+
+    while (!usb_serial_ready())
+        ;
 
     // Start scheduler
     vTaskStartScheduler();
