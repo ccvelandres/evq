@@ -37,6 +37,7 @@ add_library(evq
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_core.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_log.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_stream.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/evq_event.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_message.c)
 
 target_include_directories(evq PUBLIC

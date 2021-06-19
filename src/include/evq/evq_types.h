@@ -20,6 +20,7 @@ extern "C"
     typedef enum
     {
         EVQ_ERROR_NONE,         // No error
+        EVQ_ERROR_EVENT,        // Incoming event
         EVQ_ERROR,              // General error
         EVQ_ERROR_UNSUPPORTED,  // Unsupported error
         EVQ_ERROR_LIST_FULL,    // List error

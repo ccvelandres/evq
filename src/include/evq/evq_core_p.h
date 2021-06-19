@@ -42,20 +42,12 @@ extern "C"
 
     typedef enum
     {
-        EVQ_CMT_UNINITIALIZED,
-        EVQ_CMT_HANDLE_REGISTER,
-        EVQ_CMT_HANDLE_UNREGISTER,
-        EVQ_CMT_EVENT_POST,
-    } evq_core_message_type_t;
-
-    typedef enum
-    {
-        EVQ_C_EV_MSG              = (1 << 0),
-        EVQ_C_EV_HDL_MSG_TX       = (1 << 1),
-        EVQ_C_EV_HDL_MSG_RX       = (1 << 2),
-        EVQ_C_EV_HDL_MSG_RESPONSE = (1 << 3),
-        EVQ_C_EV_HDL_MSG_TX_ERROR = (1 << 4),
-    } evq_core_events_t;
+        EVQ_SE_CTRL_MSG         = (1 << 0), /** General event for evq messages */
+        EVQ_SE_ROUTE_MSG        = (1 << 1), /** Notify stack with message for routing  */
+        EVQ_SE_HDL_MSG_RX       = (1 << 2), /** Handle event for rx messages */
+        EVQ_SE_HDL_MSG_RESPONSE = (1 << 3), /** Handle event for response messages */
+        EVQ_SE_HDL_MSG_TX_ERROR = (1 << 4), /** Handle event for tx error messages */
+    } evq_stack_events_t;
 
     typedef struct
     {
@@ -73,21 +65,64 @@ extern "C"
         evq_id_t            eventList[EVQ_MAX_EVENT_SUBSCRIBE_COUNT];
     } evq_handle_priv_t;
 
+    typedef enum
+    {
+        EVQ_SE_UNINITIALIZED,
+        EVQ_SE_HDL_CTRL,
+        EVQ_SE_EVT_CTRL,
+    } evq_se_msg_type_t;
+
+    typedef enum
+    {
+        EVQ_SE_MSG_HDL_REGISTER,
+        EVQ_SE_MSG_HDL_UNREGISTER
+    } evq_msg_type_hdl_ctrl_t;
+
     typedef struct
     {
-        evq_core_message_type_t msgType;
+        evq_msg_type_hdl_ctrl_t type;
+        evq_handle_priv_t      *handle;
+    } evq_se_msg_hdl_t;
+
+    typedef enum
+    {
+        EVQ_SE_MSG_EVT_POST
+    } evq_msg_type_evt_t;
+
+    typedef struct
+    {
+        evq_msg_type_evt_t type;
+        evq_id_t           srcId;
+        evq_id_t           evtId;
+    } evq_se_msg_evt_t;
+
+    typedef struct
+    {
+        evq_se_msg_type_t msgType;
         union
         {
-            struct
-            {
-                evq_handle_priv_t *handle;
-            } hdl_reg;
-            struct {
-                evq_id_t srcId;
-                evq_id_t evtId;
-            } evt;
+            evq_se_msg_hdl_t hdl;
+            evq_se_msg_evt_t evt;
         } msg;
     } evq_core_message_t;
+
+   /**
+     * @brief Sends se messages for processing
+     *
+     * Sends @p cMsg by copy.
+     *
+     * @code
+     * void foo() {
+     *     evq_core_message_t msg;
+     *     // Populate msg here...
+     *     evq_se_send_msg(&msg);
+     * }
+     * @endcode
+     *
+     * @param[in] cMsg msg to send
+     * @return EVQ_ERROR_NONE on success
+     */
+    evq_status_t evq_se_send_msg(evq_core_message_t *cMsg);
 
 #ifdef __cplusplus
 }

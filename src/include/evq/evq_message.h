@@ -18,22 +18,6 @@ extern "C"
 #include <evq/evq_core.h>
 #include <evq/evq_types.h>
 
-    typedef enum
-    {
-        EVQ_MSG_TYPE_DIRECT,
-        EVQ_MSG_TYPE_SYS_EVENT,
-        EVQ_MSG_TYPE_USER_EVENT
-    } evq_message_type_t;
-
-    typedef enum
-    {
-        EVQ_SYS_EVENT_START,
-        EVQ_SYS_EVENT_SHUTDOWN,
-        EVQ_SYS_EVENT_SUSPEND,
-    } evq_sys_event_t;
-
-    typedef uint32_t evq_user_event_t;
-
     typedef struct zEVQ_MSG_PRIV
     {
         evq_id_t srcId;                // Source ID

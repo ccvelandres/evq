@@ -8,7 +8,6 @@
 #include <evq/evq_port.h>
 #include <evq/evq_stream.h>
 #include <evq/evq_config.h>
-
 #include <evq/evq_core_p.h>
 
 /**
@@ -35,8 +34,8 @@ typedef struct
     evq_handle_priv_t *handles[EVQ_MAX_HANDLES];
 } evq_context_t;
 
-static_assert(sizeof(evq_handle_priv_t) != sizeof(evq_static_handle_t),
-              "Mismatched static buffer size for evq_handle_t");
+// static_assert(sizeof(evq_handle_priv_t) != sizeof(evq_static_handle_t),
+//               "Mismatched static buffer size for evq_handle_t");
 static_assert(EVQ_MAX_HANDLES < UINT16_MAX, "EVQ_MAX_HANDLES cannot exceed UINT16_MAX");
 
 ////////////////////////////////////////////////////////////////////
@@ -171,45 +170,11 @@ static evq_status_t evq_priv_handle_destroy(evq_handle_priv_t *privHandle)
 }
 
 /**
- * @brief Sends se messages for processing
- *
- * Sends @p cMsg by copy.
- *
- * @code
- * void foo() {
- *     evq_core_message_t msg;
- *     // Populate msg here...
- *     evq_priv_send_core(&msg);
- * }
- * @endcode
- *
- * @param[in] cMsg pointe to send
- * @return EVQ_ERROR_NONE on success
- */
-static evq_status_t evq_priv_send_core(evq_core_message_t *cMsg)
-{
-    evq_status_t   st  = EVQ_ERROR_NONE;
-    evq_context_t *ctx = &g_context;
-
-    if (EVQ_ERROR_NONE == evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT))
-    {
-        st = evq_stream_push(ctx->se_stream, cMsg);
-        if (EVQ_ERROR_NONE == st)
-        {
-            // notify on success
-            (void)evq_egroup_set(ctx->se_egroup, EVQ_C_EV_MSG, EVQ_CORE_TIMEOUT);
-        }
-        evq_mutex_unlock(ctx->mutex);
-    }
-    return st;
-}
-
-/**
  * @brief Helper function for se_handler for registering handles
  * @param[in] privHandle handle to register
  * @return EVQ_ERROR_NONE on success
  */
-static evq_status_t evq_se_register_handle(evq_handle_priv_t *privHandle)
+static evq_status_t evq_priv_register_handle(evq_handle_priv_t *privHandle)
 {
     evq_status_t   st  = EVQ_ERROR_NONE;
     evq_context_t *ctx = &g_context;
@@ -236,7 +201,7 @@ static evq_status_t evq_se_register_handle(evq_handle_priv_t *privHandle)
  * @param[in] privHandle handle to unregister
  * @return EVQ_ERROR_NONE on success
  */
-static evq_status_t evq_se_unregister_handle(evq_handle_priv_t *privHandle)
+static evq_status_t evq_priv_unregister_handle(evq_handle_priv_t *privHandle)
 {
     evq_status_t   st  = EVQ_ERROR_NONE;
     evq_context_t *ctx = &g_context;
@@ -258,7 +223,42 @@ static evq_status_t evq_se_unregister_handle(evq_handle_priv_t *privHandle)
     return st;
 }
 
-static evq_status_t evq_se_handle(evq_context_t *ctx)
+static evq_status_t evq_se_handler_hdl_ctrl(evq_se_msg_hdl_t *msg)
+{
+    evq_status_t st = EVQ_ERROR_NONE;
+
+    switch (msg->type)
+    {
+    case EVQ_SE_MSG_HDL_REGISTER:
+        st = evq_priv_register_handle(msg->handle);
+        break;
+    case EVQ_SE_MSG_HDL_UNREGISTER:
+        st = evq_priv_unregister_handle(msg->handle);
+        break;
+    default:
+        EVQ_LOG_DEBUG("Unhandled se_hdl_ctrl message type: %u\n", msg->type);
+        break;
+    }
+
+    return st;
+}
+
+static evq_status_t evq_se_handler_evt(evq_se_msg_evt_t *msg)
+{
+    evq_status_t st = EVQ_ERROR_NONE;
+    switch(msg->type)
+    {
+        case EVQ_SE_MSG_EVT_POST:
+            
+        break;
+        default:
+            EVQ_LOG_DEBUG("Unhandled st_evt message type: %u\n", msg->type);
+        break;
+    }
+    return st;
+}
+
+static evq_status_t evq_se_handle_ctrl_msg(evq_context_t *ctx)
 {
     evq_status_t       st = 0;
     evq_core_message_t cMsg;
@@ -267,11 +267,11 @@ static evq_status_t evq_se_handle(evq_context_t *ctx)
     {
         switch (cMsg.msgType)
         {
-        case EVQ_CMT_HANDLE_REGISTER:
-            st = evq_se_register_handle(cMsg.msg.hdl_reg.handle);
+        case EVQ_SE_HDL_CTRL:
+            st = evq_se_handler_hdl_ctrl(&cMsg.msg.hdl);
             break;
-        case EVQ_CMT_HANDLE_UNREGISTER:
-            st = evq_se_unregister_handle(cMsg.msg.hdl_reg.handle);
+        case EVQ_SE_EVT_CTRL:
+            st = evq_se_handler_evt(&cMsg.msg.evt);
             break;
         default:
             break;
@@ -279,7 +279,7 @@ static evq_status_t evq_se_handle(evq_context_t *ctx)
     }
 }
 
-static evq_status_t evq_se_handle_tx(evq_context_t *ctx)
+static evq_status_t evq_se_handle_route_msg(evq_context_t *ctx)
 {
     evq_status_t       st        = EVQ_ERROR_NONE;
     evq_handle_priv_t *srcHandle = NULL;
@@ -323,7 +323,7 @@ static evq_status_t evq_se_handle_tx(evq_context_t *ctx)
             continue;
         }
 
-        st = evq_egroup_set(dstHandle->egroup, EVQ_C_EV_HDL_MSG_RX, EVQ_CORE_TIMEOUT);
+        st = evq_egroup_set(dstHandle->egroup, EVQ_SE_HDL_MSG_RX, EVQ_CORE_TIMEOUT);
         if (EVQ_ERROR_NONE != st)
         {
             // Could not notify destination, dont drop since message is already
@@ -338,6 +338,28 @@ static evq_status_t evq_se_handle_tx(evq_context_t *ctx)
                       seMsg->seqId);
     }
 
+    return st;
+}
+
+////////////////////////////////////////////////////////////////////
+// Stack Functions
+////////////////////////////////////////////////////////////////////
+
+evq_status_t evq_se_send_msg(evq_core_message_t *cMsg)
+{
+    evq_status_t   st  = EVQ_ERROR_NONE;
+    evq_context_t *ctx = &g_context;
+
+    if (EVQ_ERROR_NONE == evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT))
+    {
+        st = evq_stream_push(ctx->se_stream, cMsg);
+        if (EVQ_ERROR_NONE == st)
+        {
+            // notify on success
+            (void)evq_egroup_set(ctx->se_egroup, EVQ_SE_CTRL_MSG, EVQ_CORE_TIMEOUT);
+        }
+        evq_mutex_unlock(ctx->mutex);
+    }
     return st;
 }
 
@@ -415,8 +437,8 @@ void evq_process()
     }
     else
     {
-        if (eventBits & EVQ_C_EV_MSG) evq_se_handle(ctx);
-        if (eventBits & EVQ_C_EV_HDL_MSG_TX) evq_se_handle_tx(ctx);
+        if (eventBits & EVQ_SE_CTRL_MSG) evq_se_handle_ctrl_msg(ctx);
+        if (eventBits & EVQ_SE_ROUTE_MSG) evq_se_handle_route_msg(ctx);
     }
 }
 
@@ -475,10 +497,11 @@ evq_status_t evq_handle_register(evq_handle_t *handle, const evq_handle_config_t
     {
         // Send the register command to se stream
         evq_core_message_t cMsg;
-        cMsg.msgType            = EVQ_CMT_HANDLE_REGISTER;
-        cMsg.msg.hdl_reg.handle = privHandle;
+        cMsg.msgType        = EVQ_SE_HDL_CTRL;
+        cMsg.msg.hdl.type   = EVQ_SE_MSG_HDL_REGISTER;
+        cMsg.msg.hdl.handle = privHandle;
 
-        st = evq_priv_send_core(&cMsg);
+        st = evq_se_send_msg(&cMsg);
         if (EVQ_ERROR_NONE != st)
         {
             EVQ_LOG_TRACE("Could not send handle register message to core\n");
@@ -517,10 +540,11 @@ evq_status_t evq_handle_unregister(evq_handle_t *handle)
     if (privHandle->isRegistered)
     {
         evq_core_message_t cMsg;
-        cMsg.msgType            = EVQ_CMT_HANDLE_UNREGISTER;
-        cMsg.msg.hdl_reg.handle = privHandle;
+        cMsg.msgType        = EVQ_SE_HDL_CTRL;
+        cMsg.msg.hdl.type   = EVQ_SE_MSG_HDL_UNREGISTER;
+        cMsg.msg.hdl.handle = privHandle;
 
-        st = evq_priv_send_core(&cMsg);
+        st = evq_se_send_msg(&cMsg);
         if (EVQ_ERROR_NONE != st)
         {
             EVQ_LOG_TRACE("Could not send handle unregister message to core\n");
@@ -562,7 +586,7 @@ evq_status_t evq_send(evq_handle_t handle, evq_id_t dstId, evq_id_t messageId, e
     if (EVQ_ERROR_NONE == st)
     {
         // notify core on send
-        st = evq_egroup_set(g_context.se_egroup, EVQ_C_EV_HDL_MSG_TX, EVQ_CORE_TIMEOUT);
+        st = evq_egroup_set(g_context.se_egroup, EVQ_SE_ROUTE_MSG, EVQ_CORE_TIMEOUT);
     }
     return st;
 }
@@ -589,7 +613,7 @@ evq_status_t evq_receive(evq_handle_t handle, evq_message_t *message, uint32_t t
              * waiting, else this wait times out
              */
             (void)evq_egroup_wait(privHandle->egroup,
-                                  EVQ_C_EV_HDL_MSG_RX,
+                                  EVQ_SE_HDL_MSG_RX,
                                   &eventBits,
                                   true,
                                   remainingTime);
@@ -648,81 +672,3 @@ evq_status_t evq_send_receive(evq_handle_t   handle,
     // return st;
 }
 #endif
-
-evq_status_t evq_subscribe(evq_handle_t handle, evq_id_t evtId)
-{
-    evq_status_t       st         = EVQ_ERROR_LIST_FULL;
-    evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
-
-    EVQ_ASSERT(NULL != handle, "handle argument is null");
-    EVQ_ASSERT(0 != evtId, "evtId cannot be 0");
-
-    // add evtId to list
-    for (uint32_t i = 0; i < EVQ_MAX_EVENT_SUBSCRIBE_COUNT; ++i)
-    {
-        if (0 == privHandle->eventList[i])
-        {
-            privHandle->eventList[i] = evtId;
-            st                       = EVQ_ERROR_NONE;
-        }
-    }
-
-    return st;
-}
-
-evq_status_t evq_subscribe_a(evq_handle_t handle, const evq_id_t *evtId, uint32_t cnt)
-{
-    evq_status_t       st         = EVQ_ERROR_NONE;
-    evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
-
-    EVQ_ASSERT(NULL != handle, "handle argument is null");
-    EVQ_ASSERT(NULL != evtId, "evtId cannot be null");
-    EVQ_ASSERT(0 != cnt, "evtId cannot be 0");
-
-    // add all event ids
-    // for (uint32_t cntIndex = 0; i < cnt; cntIndex)
-    // {
-    // }
-
-    st = EVQ_ERROR_UNSUPPORTED;
-    return st;
-}
-
-evq_status_t evq_post_event(evq_handle_t handle, evq_id_t evtId)
-{
-    evq_status_t       st         = EVQ_ERROR_NONE;
-    evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
-
-    EVQ_ASSERT(NULL != handle, "handle argument is null");
-    EVQ_ASSERT(0 != evtId, "evtId cannot be 0");
-
-    {
-        // send a core message
-        evq_core_message_t cMsg = {
-            .msgType = EVQ_CMT_EVENT_POST,
-            .msg.evt = {
-                .srcId = privHandle->handleId,
-                .evtId = evtId,
-            },
-        };
-
-        st = evq_priv_send_core(&cMsg);
-        if (EVQ_ERROR_NONE != st)
-        {
-            EVQ_LOG_TRACE("Could not send event post message to core\n");
-        }
-    }
-
-    return st;
-}
-
-evq_status_t evq_poll_event(evq_handle_t handle, evq_id_t *evtId)
-{
-    evq_status_t       st         = EVQ_ERROR_NONE;
-    evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
-
-    EVQ_ASSERT(NULL != handle, "handle argument is null");
-    EVQ_ASSERT(0 != evtId, "evtId cannot be 0");
-
-    return st;
-}
