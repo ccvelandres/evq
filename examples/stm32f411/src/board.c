@@ -14,13 +14,15 @@
  * AHB Clock  -> 84MHz
  * APB1 Clock -> 42MHz --> low speed domain
  * APB2 Clock -> 84MHz --> high speed domain
- * 
-*/
+ *
+ */
 
-void setupClocks(void)
-{
-    rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
-}
+#define HEARTBEAT_TASK_STACK_SIZE 1024
+static TaskHandle_t heartbeatTaskHandle_1;
+static StaticTask_t heartbeatTaskBuffer_1;
+static StackType_t  heartbeatStack_1[HEARTBEAT_TASK_STACK_SIZE];
+
+void setupClocks(void) { rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]); }
 
 void setupGpio(void)
 {
@@ -41,6 +43,13 @@ static void heartbeatFunction(void *pxArg)
 
 void setupHeartbeat(void)
 {
-    static TaskHandle_t taskHandle_1;
-    xTaskCreate(heartbeatFunction, "thread_1", 128, NULL, configMAX_PRIORITIES - 1, &taskHandle_1);
+    static TaskHandle_t heartbeatTaskHandle;
+    heartbeatTaskHandle = xTaskCreateStatic(heartbeatFunction,
+                                            "heartbeatTask",
+                                            HEARTBEAT_TASK_STACK_SIZE,
+                                            NULL,
+                                            1,
+                                            heartbeatStack_1,
+                                            &heartbeatTaskBuffer_1);
+    (void)heartbeatTaskHandle;
 }
