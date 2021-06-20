@@ -185,7 +185,7 @@ static evq_status_t evq_priv_register_handle(evq_handle_priv_t *privHandle)
             && (evq_priv_add_handle(privHandle)))
         {
             privHandle->isRegistered = true;
-            EVQ_LOG_DEBUG("Registered handle(%X)\n", privHandle->handleId);
+            EVQ_LOG_TRACE("Registered handle(%X)\n", privHandle->handleId);
         }
         else
         {
@@ -211,7 +211,7 @@ static evq_status_t evq_priv_unregister_handle(evq_handle_priv_t *privHandle)
         if (evq_priv_remove_handle(privHandle))
         {
             privHandle->isRegistered = false;
-            EVQ_LOG_DEBUG("Unregistered handle(%X)\n", privHandle->handleId);
+            EVQ_LOG_TRACE("Unregistered handle(%X)\n", privHandle->handleId);
             (void)evq_priv_handle_destroy(privHandle);
         }
         else
@@ -236,7 +236,7 @@ static evq_status_t evq_se_handler_hdl_ctrl(evq_se_msg_hdl_t *msg)
         st = evq_priv_unregister_handle(msg->handle);
         break;
     default:
-        EVQ_LOG_DEBUG("Unhandled se_hdl_ctrl message type: %u\n", msg->type);
+        EVQ_LOG_TRACE("Unhandled se_hdl_ctrl message type: %u\n", msg->type);
         break;
     }
 
@@ -252,7 +252,7 @@ static evq_status_t evq_se_handler_evt(evq_se_msg_evt_t *msg)
 
         break;
     default:
-        EVQ_LOG_DEBUG("Unhandled st_evt message type: %u\n", msg->type);
+        EVQ_LOG_TRACE("Unhandled st_evt message type: %u\n", msg->type);
         break;
     }
     return st;
@@ -583,7 +583,7 @@ evq_status_t evq_send(evq_handle_t handle, evq_id_t dstId, evq_id_t messageId, e
     seMsg->msgId = messageId;
     seMsg->seqId = privHandle->seqNum++;
 
-    EVQ_LOG_DEBUG("[%s] Sending message to %X\n", privHandle->handleName, seMsg->dstId);
+    EVQ_LOG_TRACE("[%s] Sending message to %X\n", privHandle->handleName, seMsg->dstId);
     st = evq_stream_push(privHandle->txStream, &seMsg);
     if (EVQ_ERROR_NONE == st)
     {
@@ -627,7 +627,7 @@ evq_status_t evq_receive(evq_handle_t handle, evq_message_t *message, uint32_t t
 
     if (EVQ_ERROR_NONE == st)
     {
-        EVQ_LOG_DEBUG("[%s] Received message from %X\n", privHandle->handleName, seMsg->srcId);
+        EVQ_LOG_TRACE("[%s] Received message from %X\n", privHandle->handleName, seMsg->srcId);
         *message = seMsg;
     }
     else
