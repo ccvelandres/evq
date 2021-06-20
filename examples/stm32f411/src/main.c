@@ -14,74 +14,48 @@
 #include "board.h"
 #include "usb.h"
 
-#define CLIENT_STACK_SIZE 1024
+#define EVQ_TASK_STACK_SIZE 1024
 
-static TaskHandle_t evqClientTaskHandle_1;
-static StaticTask_t evqClientTaskBuffer_1;
-static StackType_t  evqClientStack_1[CLIENT_STACK_SIZE];
+const evq_id_t evqClientReceiverId = 0xB0;
 
-static TaskHandle_t evqClientTaskHandle_2;
-static StaticTask_t evqClientTaskBuffer_2;
-static StackType_t  evqClientStack_2[CLIENT_STACK_SIZE];
-
-static TaskHandle_t evqClientTaskHandle_3;
-static StaticTask_t evqClientTaskBuffer_3;
-static StackType_t  evqClientStack_3[CLIENT_STACK_SIZE];
+static TaskHandle_t evqReceiverTaskHandle;
+static StaticTask_t evqReceiverTaskBuffer;
+static StackType_t  evqReceiverStack[EVQ_TASK_STACK_SIZE];
 
 static TaskHandle_t evqCoreTaskHandle;
 static StaticTask_t evqCoreTaskBuffer;
-static StackType_t  evqCoreStack[CLIENT_STACK_SIZE];
+static StackType_t  evqCoreStack[EVQ_TASK_STACK_SIZE];
 
-const evq_id_t evqClientHandleId_1 = 0xA1;
-const evq_id_t evqClientHandleId_2 = 0xA2;
-const evq_id_t evqClientHandleId_3 = 0xA3;
+typedef struct
+{
+    evq_id_t    id;
+    const char *name;
+    uint32_t    intervalMs;
+} evqClientConfig_t;
 
-void evqClientTaskFunction_1(void *pxArg)
+static const evqClientConfig_t evqClientConfig[] = {
+    {.id = 0x00, .name = "client_1", .intervalMs = 250},
+    {.id = 0x01, .name = "client_2", .intervalMs = 260},
+    {.id = 0x02, .name = "client_3", .intervalMs = 270},
+    {.id = 0x03, .name = "client_4", .intervalMs = 280},
+    {.id = 0x04, .name = "client_5", .intervalMs = 290},
+};
+#define evqClientCount (sizeof(evqClientConfig) / sizeof(evqClientConfig_t))
+
+static TaskHandle_t evqClientTaskHandle[evqClientCount];
+static StaticTask_t evqClientTaskBuffer[evqClientCount];
+static StackType_t  evqClientStack[evqClientCount][EVQ_TASK_STACK_SIZE];
+
+void evqReceiverTaskFunction(void *pxArg)
 {
     evq_status_t              st            = EVQ_ERROR_NONE;
     evq_handle_t              handle        = NULL;
-    const evq_handle_config_t handle_config = {.handleName   = "client_1",
-                                               .handleId     = evqClientHandleId_1,
-                                               .streamSize    = 8,
+    const evq_handle_config_t handle_config = {.handleName   = "receiver",
+                                               .handleId     = evqClientReceiverId,
+                                               .streamSize   = 8,
                                                .eventHandler = NULL};
 
-    st = evq_handle_register(&handle, &handle_config);
-    configASSERT(st == EVQ_ERROR_NONE);
-
-    while (1)
-    {
-        static uint32_t msgCount = 0;
-        static uint32_t msgSent  = 0;
-
-        evq_message_t msg = NULL;
-        evq_message_allocate(&msg, 0);
-
-        st = evq_send(handle, evqClientHandleId_2, msgCount, msg);
-        if (EVQ_ERROR_NONE == st)
-        {
-            msgSent++;
-        }
-        else
-        {
-            EVQ_LOG_ERROR("DIRECT: Error(0x%X) sending %d\n", st, msgCount);
-        }
-
-        msgCount++;
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-
-    st = evq_handle_unregister(handle);
-    configASSERT(st == EVQ_ERROR_NONE);
-}
-
-void evqClientTaskFunction_2(void *pxArg)
-{
-    evq_status_t              st            = EVQ_ERROR_NONE;
-    evq_handle_t              handle        = NULL;
-    const evq_handle_config_t handle_config = {.handleName   = "client_2",
-                                               .handleId     = evqClientHandleId_2,
-                                               .streamSize    = 8,
-                                               .eventHandler = NULL};
+    uint32_t lastMsgId[evqClientCount] = {};
 
     st = evq_handle_register(&handle, &handle_config);
     configASSERT(st == EVQ_ERROR_NONE);
@@ -93,8 +67,23 @@ void evqClientTaskFunction_2(void *pxArg)
         st = evq_receive(handle, &msg, EVQ_TIMEOUT_MAX);
         if (EVQ_ERROR_NONE == st)
         {
-            EVQ_LOG_DEBUG("evq_message received from %x: %u\n", msg->srcId, msg->msgId);
+            uint32_t index = msg->srcId;
+            // Verify that msgId send is lastMsgId + 1
+            if (lastMsgId[index] != msg->msgId)
+            {
+                EVQ_LOG_ERROR("Dropped message Id from %x, expected %u, actual %u\n",
+                              msg->srcId,
+                              msg->msgId,
+                              lastMsgId[index]);
+            }
+            lastMsgId[index] = msg->msgId + 1;
 
+            EVQ_LOG_INFO("Received messages: %08u, %08u, %08u, %08u, %08u\n",
+                         lastMsgId[0],
+                         lastMsgId[1],
+                         lastMsgId[2],
+                         lastMsgId[3],
+                         lastMsgId[4]);
             // destroy message after use
             evq_message_destroy(msg);
         }
@@ -104,40 +93,38 @@ void evqClientTaskFunction_2(void *pxArg)
     configASSERT(st == EVQ_ERROR_NONE);
 }
 
-void evqClientTaskFunction_3(void *pxArg)
+void evqClientTaskFunction(void *pxArg)
 {
+    uint32_t                  clientIndex   = (uint32_t)pxArg;
     evq_status_t              st            = EVQ_ERROR_NONE;
     evq_handle_t              handle        = NULL;
-    const evq_handle_config_t handle_config = {.handleName   = "client_3",
-                                               .handleId     = evqClientHandleId_3,
-                                               .streamSize    = 8,
+    const evq_handle_config_t handle_config = {.handleName   = evqClientConfig[clientIndex].name,
+                                               .handleId     = evqClientConfig[clientIndex].id,
+                                               .streamSize   = 8,
                                                .eventHandler = NULL};
+
+    // Start from msg 1 since receiver expects 0->1
+    uint32_t currentMsgCount = 1;
 
     st = evq_handle_register(&handle, &handle_config);
     configASSERT(st == EVQ_ERROR_NONE);
 
     while (1)
     {
-        static uint32_t msgCount = 0;
-        static uint32_t msgSent  = 0;
-
         evq_message_t msg = NULL;
-        evq_message_allocate(&msg, 0);
 
-        st = evq_send(handle, evqClientHandleId_2, msgCount, msg);
-        if (EVQ_ERROR_NONE == st)
+        st = evq_message_allocate(&msg, 0);
+        configASSERT(msg != NULL);
+
+        st = evq_send(handle, evqClientReceiverId, currentMsgCount, msg);
+        if (EVQ_ERROR_NONE != st)
         {
-            msgSent++;
-        }
-        else
-        {
-            EVQ_LOG_ERROR("DIRECT: Error(0x%X) sending %d\n", st, msgCount);
+            EVQ_LOG_ERROR("DIRECT: Error(0x%X) sending %d\n", st, currentMsgCount);
         }
 
-        msgCount++;
-        vTaskDelay(pdMS_TO_TICKS(600));
+        currentMsgCount++;
+        vTaskDelay(pdMS_TO_TICKS(evqClientConfig[clientIndex].intervalMs));
     }
-
     st = evq_handle_unregister(handle);
     configASSERT(st == EVQ_ERROR_NONE);
 }
@@ -154,31 +141,28 @@ int main(void)
     evq_status_t st = evq_init();
     configASSERT(st == EVQ_ERROR_NONE);
 
-    evqClientTaskHandle_1 = xTaskCreateStatic(evqClientTaskFunction_1,
-                                              "evqClientTaskFunction_1",
-                                              CLIENT_STACK_SIZE,
+    evqReceiverTaskHandle = xTaskCreateStatic(evqReceiverTaskFunction,
+                                              "evqReceiverTaskFunction",
+                                              EVQ_TASK_STACK_SIZE,
                                               NULL,
                                               configMAX_PRIORITIES - 3,
-                                              evqClientStack_1,
-                                              &evqClientTaskBuffer_1);
-    evqClientTaskHandle_2 = xTaskCreateStatic(evqClientTaskFunction_2,
-                                              "evqClientTaskFunction_2",
-                                              CLIENT_STACK_SIZE,
-                                              NULL,
-                                              configMAX_PRIORITIES - 3,
-                                              evqClientStack_2,
-                                              &evqClientTaskBuffer_2);
-    evqClientTaskHandle_3 = xTaskCreateStatic(evqClientTaskFunction_3,
-                                              "evqClientTaskFunction_3",
-                                              CLIENT_STACK_SIZE,
-                                              NULL,
-                                              configMAX_PRIORITIES - 3,
-                                              evqClientStack_3,
-                                              &evqClientTaskBuffer_3);
+                                              evqReceiverStack,
+                                              &evqReceiverTaskBuffer);
+
+    for (uint32_t i = 0; i < evqClientCount; ++i)
+    {
+        evqClientTaskHandle[i] = xTaskCreateStatic(evqClientTaskFunction,
+                                                   evqClientConfig[i].name,
+                                                   EVQ_TASK_STACK_SIZE,
+                                                   (void *)i,
+                                                   configMAX_PRIORITIES - 3,
+                                                   evqClientStack[i],
+                                                   &evqClientTaskBuffer[i]);
+    }
 
     evqCoreTaskHandle = xTaskCreateStatic(evqCoreTaskFunction,
                                           "evqCoreTaskFunction",
-                                          CLIENT_STACK_SIZE,
+                                          EVQ_TASK_STACK_SIZE,
                                           NULL,
                                           configMAX_PRIORITIES - 3,
                                           evqCoreStack,
