@@ -36,25 +36,13 @@ const evq_id_t evqClientHandleId_1 = 0xA1;
 const evq_id_t evqClientHandleId_2 = 0xA2;
 const evq_id_t evqClientHandleId_3 = 0xA3;
 
-static void setupBoard()
-{
-    setupClocks();
-    setupGpio();
-    setupUsb();
-    setupHeartbeat();
-    setupLog();
-
-    while (!usb_serial_ready())
-        ;
-}
-
 void evqClientTaskFunction_1(void *pxArg)
 {
     evq_status_t              st            = EVQ_ERROR_NONE;
     evq_handle_t              handle        = NULL;
     const evq_handle_config_t handle_config = {.handleName   = "client_1",
                                                .handleId     = evqClientHandleId_1,
-                                               .queueSize    = 8,
+                                               .streamSize    = 8,
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);
@@ -92,7 +80,7 @@ void evqClientTaskFunction_2(void *pxArg)
     evq_handle_t              handle        = NULL;
     const evq_handle_config_t handle_config = {.handleName   = "client_2",
                                                .handleId     = evqClientHandleId_2,
-                                               .queueSize    = 8,
+                                               .streamSize    = 8,
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);
@@ -122,7 +110,7 @@ void evqClientTaskFunction_3(void *pxArg)
     evq_handle_t              handle        = NULL;
     const evq_handle_config_t handle_config = {.handleName   = "client_3",
                                                .handleId     = evqClientHandleId_3,
-                                               .queueSize    = 8,
+                                               .streamSize    = 8,
                                                .eventHandler = NULL};
 
     st = evq_handle_register(&handle, &handle_config);

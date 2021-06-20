@@ -64,7 +64,7 @@ auto threadFunction_1 = []() {
     evq_handle_config_t handleConfig = {
         .handleName   = "thread_1",
         .handleId     = HANDLE_ID_1,
-        .queueSize    = HANDLE_QUEUE_SIZE,
+        .streamSize    = HANDLE_QUEUE_SIZE,
         .eventHandler = NULL,
     };
 
@@ -116,7 +116,7 @@ auto threadFunction_2 = []() {
     evq_handle_config_t handleConfig = {
         .handleName   = "thread_2",
         .handleId     = HANDLE_ID_2,
-        .queueSize    = HANDLE_QUEUE_SIZE,
+        .streamSize    = HANDLE_QUEUE_SIZE,
         .eventHandler = NULL,
     };
 
@@ -213,8 +213,8 @@ void runSinglethread()
     evq_handle_t        hdl[2]       = {};
     evq_message_t       msg[3]       = {};
     evq_handle_config_t hdlConfig[2] = {
-        {.handleId = HANDLE_ID_1, .queueSize = HANDLE_QUEUE_SIZE},
-        {.handleId = HANDLE_ID_2, .queueSize = HANDLE_QUEUE_SIZE}
+        {.handleId = HANDLE_ID_1, .streamSize = HANDLE_QUEUE_SIZE},
+        {.handleId = HANDLE_ID_2, .streamSize = HANDLE_QUEUE_SIZE}
     };
 
     auto runProcess = [](size_t cycles) {

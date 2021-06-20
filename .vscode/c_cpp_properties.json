@@ -24,7 +24,7 @@
                 "${workspaceFolder}/examples/stm32f411/external/libopencm3/include",
                 "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/include",
                 "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/portable/GCC/ARM_CM4F",
-                "${workspaceFolder}/build/",
+                "${workspaceFolder}/examples/stm32f411/build/",
                 "${workspaceFolder}/src/include/",
             ],
             "defines": [

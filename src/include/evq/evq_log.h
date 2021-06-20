@@ -18,10 +18,38 @@ extern "C"
 #include <evq/evq_types.h>
 #include <evq/evq_config.h>
 
+    /** Type for log level */
     typedef uint8_t evq_log_level_t;
+    /**
+     * @brief Retrieves the current log level
+     * @return current log level
+    */
     evq_log_level_t evq_log_get_level();
+
+    /**
+     * @brief Sets the current log level for evq log calls
+     * @param[in] level log level to set
+    */
     void            evq_log_set_level(const evq_log_level_t level);
+
+    /**
+     * @brief Wrapper function for writing log messages via evq log.
+     * It is preferable to use EVQ_LOG_* macros instead to allow optimization 
+     * via EVQ_LOG_LEVEL_MAX macro
+     * 
+     * @param[in] level message log level
+     * @param [in] fmt string to format
+     * @param[in] ... format string data arguments
+    */
     void            evq_log(evq_log_level_t level, const char *fmt, ...);
+
+    /** 
+     * @brief Helper function for evq assertion checks
+     * @param[in] condstr assertion condition string
+     * @param[in] file filename where the assertion is called
+     * @param[in] line line number where the assertion is called
+     * @param[in] str assertion message
+    */
     void            evq_assert(const char *condstr, const char *file, int line, const char *str);
 
 #define EVQ_LOG_LEVEL_NONE      0

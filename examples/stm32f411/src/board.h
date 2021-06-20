@@ -32,5 +32,10 @@ void setupLog(void);
 */
 void setupHeartbeat(void);
 
+/**
+ * Setup board (gpio, serial, usb, etc)
+*/
+void setupBoard();
+
 /** threadsafe logging call */
 uint32_t th_log(const char *str, uint32_t len);

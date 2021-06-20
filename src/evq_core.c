@@ -246,13 +246,13 @@ static evq_status_t evq_se_handler_hdl_ctrl(evq_se_msg_hdl_t *msg)
 static evq_status_t evq_se_handler_evt(evq_se_msg_evt_t *msg)
 {
     evq_status_t st = EVQ_ERROR_NONE;
-    switch(msg->type)
+    switch (msg->type)
     {
-        case EVQ_SE_MSG_EVT_POST:
-            
+    case EVQ_SE_MSG_EVT_POST:
+
         break;
-        default:
-            EVQ_LOG_DEBUG("Unhandled st_evt message type: %u\n", msg->type);
+    default:
+        EVQ_LOG_DEBUG("Unhandled st_evt message type: %u\n", msg->type);
         break;
     }
     return st;
@@ -268,15 +268,17 @@ static evq_status_t evq_se_handle_ctrl_msg(evq_context_t *ctx)
         switch (cMsg.msgType)
         {
         case EVQ_SE_HDL_CTRL:
-            st = evq_se_handler_hdl_ctrl(&cMsg.msg.hdl);
+            (void)evq_se_handler_hdl_ctrl(&cMsg.msg.hdl);
             break;
         case EVQ_SE_EVT_CTRL:
-            st = evq_se_handler_evt(&cMsg.msg.evt);
+            (void)evq_se_handler_evt(&cMsg.msg.evt);
             break;
         default:
             break;
         }
     }
+
+    return st;
 }
 
 static evq_status_t evq_se_handle_route_msg(evq_context_t *ctx)
@@ -473,14 +475,14 @@ evq_status_t evq_handle_register(evq_handle_t *handle, const evq_handle_config_t
     privHandle->eventSubCount = 0;
     memset(privHandle->eventList, 0, sizeof(privHandle->eventList));
 
-    st = evq_stream_create(&privHandle->rxStream, sizeof(evq_message_t), config->queueSize);
+    st = evq_stream_create(&privHandle->rxStream, sizeof(evq_message_t), config->streamSize);
     if ((EVQ_ERROR_NONE != st) || (NULL == privHandle->rxStream))
     {
         EVQ_LOG_ERROR("Could not create rx stream\n");
         goto cleanup;
     }
 
-    st = evq_stream_create(&privHandle->txStream, sizeof(evq_message_t), config->queueSize);
+    st = evq_stream_create(&privHandle->txStream, sizeof(evq_message_t), config->streamSize);
     if ((EVQ_ERROR_NONE != st) || (NULL == privHandle->txStream))
     {
         EVQ_LOG_ERROR("Could not create tx stream\n");
@@ -612,11 +614,7 @@ evq_status_t evq_receive(evq_handle_t handle, evq_message_t *message, uint32_t t
             /** Wait for handle rx event. Core process can push to stream while
              * waiting, else this wait times out
              */
-            (void)evq_egroup_wait(privHandle->egroup,
-                                  EVQ_SE_HDL_MSG_RX,
-                                  &eventBits,
-                                  true,
-                                  remainingTime);
+            (void)evq_egroup_wait(privHandle->egroup, EVQ_SE_HDL_MSG_RX, &eventBits, true, remainingTime);
             (void)eventBits; // don't really care about the event bits
             // this ensures wait only happens once
             remainingTime = 0;
@@ -657,18 +655,13 @@ evq_status_t evq_send_receive(evq_handle_t   handle,
     EVQ_ASSERT(NULL != handle, "handle argument is null");
     EVQ_ASSERT(NULL != message, "message argument is null");
 
-    // // Send message and wait for response
-    // seMsg.eventType                  = EVQ_STACK_EVENT_MSG_SEND_RECEIVE;
-    // seMsg.messageType                = EVQ_MSG_TYPE_DIRECT;
-    // seMsg.msg_send_receive.srcHandle = privHandle;
-    // seMsg.msg_send_receive.message   = privMessage;
-    // st                               = evq_stream_push(privHandle->txStream, &seMsg);
-    // // st                               = evq_priv_se_send(&seMsg);
+    EVQ_ASSERT(0, "Function not yet implemented");
 
-    // // wait for HS_EVENT_RESPONSE
+    (void)st;
+    (void)privHandle;
+    (void)privMessage;
+    (void)seMsg;
 
-    // // read and return response message
-
-    // return st;
+    return st;
 }
 #endif

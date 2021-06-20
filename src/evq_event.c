@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <string.h>
 
 #include <evq/evq_log.h>
 #include <evq/evq_event.h>
@@ -41,7 +42,7 @@ evq_status_t evq_subscribe_a(evq_handle_t handle, const evq_id_t *evtId, uint32_
     memset(privHandle->eventList, 0 , sizeof(privHandle->eventList));
 
     // add all event ids
-    for (uint32_t i = 0; i < cnt; i)
+    for (uint32_t i = 0; i < cnt; ++i)
     {
         privHandle->eventList[i] = evtId[i];
     }
@@ -77,13 +78,13 @@ evq_status_t evq_post_event(evq_handle_t handle, evq_id_t evtId)
     return st;
 }
 
-evq_status_t evq_poll_event(evq_handle_t handle, evq_id_t *evtId)
-{
-    evq_status_t       st         = EVQ_ERROR_NONE;
-    evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
+// evq_status_t evq_poll_event(evq_handle_t handle, evq_id_t *evtId)
+// {
+//     evq_status_t       st         = EVQ_ERROR_NONE;
+//     evq_handle_priv_t *privHandle = (evq_handle_priv_t *)handle;
 
-    EVQ_ASSERT(NULL != handle, "handle argument is null");
-    EVQ_ASSERT(0 != evtId, "evtId cannot be 0");
+//     EVQ_ASSERT(NULL != handle, "handle argument is null");
+//     EVQ_ASSERT(0 != evtId, "evtId cannot be 0");
 
-    return st;
-}
+//     return st;
+// }

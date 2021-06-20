@@ -55,22 +55,11 @@ extern "C"
     /** @} */
 #endif // EVQ_RTOS_SUPPORT
 
-       /**
-        * @brief Queue wrappers
-        */
-
-    // typedef void *evq_queue_t;
-    // evq_status_t evq_queue_create(evq_queue_t *queue, uint16_t entrySize, uint16_t queueSize);
-    // evq_status_t evq_queue_destroy(evq_queue_t queue);
-    // evq_status_t evq_queue_send(evq_queue_t queue, const void* entry, uint32_t timeout);
-    // evq_status_t evq_queue_send_isr(evq_queue_t queue, const void* entry, uint32_t timeout);
-    // evq_status_t evq_queue_receive(evq_queue_t queue, void* entry, uint32_t timeout);
-    // evq_status_t evq_queue_receive_isr(evq_queue_t queue, void* entry, uint32_t timeout);
-
     /**
      * @brief Timekeeping wrappers
      * @{
      */
+    /** @brief Retrieve current time in ms */
     uint32_t evq_get_time();
     /** @}*/
 
@@ -78,6 +67,7 @@ extern "C"
      * @brief Logging wrappers
      * @{
      */
+    /** @brief Flush logs */
     void evq_flush_log(const char *str, uint32_t len);
     /** @}*/
 

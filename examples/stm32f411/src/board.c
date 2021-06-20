@@ -52,3 +52,15 @@ void setupHeartbeat(void)
                                             &heartbeatTaskBuffer_1);
     (void)heartbeatTaskHandle;
 }
+
+void setupBoard()
+{
+    setupClocks();
+    setupGpio();
+    setupUsb();
+    setupHeartbeat();
+    setupLog();
+
+    while (!usb_serial_ready())
+        ;
+}

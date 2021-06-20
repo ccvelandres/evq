@@ -30,7 +30,7 @@ extern "C"
     {
         const char         *handleName;
         evq_id_t            handleId;
-        uint32_t            queueSize;
+        uint32_t            streamSize;
         evq_event_handler_t eventHandler;
     } evq_handle_config_t;
 
