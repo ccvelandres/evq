@@ -138,25 +138,18 @@ void usb_serial_write(char *data, uint32_t len)
     uint32_t ret = 0;
     if (usb_ready_tx)
     {
-        if ((CFG_USB_EP_PACKET_SIZE / 2) < len)
+        uint32_t remainingBytes = len;
+        while (remainingBytes > 0)
         {
-            uint32_t remainingBytes = len;
-            while (remainingBytes > 0)
-            {
-                uint32_t packetSize = remainingBytes > (CFG_USB_EP_PACKET_SIZE / 2)
-                                        ? (CFG_USB_EP_PACKET_SIZE / 2) - 1
-                                        : remainingBytes;
+            uint32_t packetSize = remainingBytes > (CFG_USB_EP_PACKET_SIZE / 2)
+                                    ? (CFG_USB_EP_PACKET_SIZE / 2) - 1
+                                    : remainingBytes;
 
-                ret = usbd_ep_write_packet(usb_dev,
-                                           CFG_USB_SERIAL_ENDPOINT,
-                                           &data[len - remainingBytes],
-                                           packetSize);
-                remainingBytes -= ret;
-            }
-        }
-        else
-        {
-            ret = usbd_ep_write_packet(usb_dev, CFG_USB_SERIAL_ENDPOINT, data, len);
+            ret = usbd_ep_write_packet(usb_dev,
+                                        CFG_USB_SERIAL_ENDPOINT,
+                                        &data[len - remainingBytes],
+                                        packetSize);
+            remainingBytes -= ret;
         }
     }
 }
