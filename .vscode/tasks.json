@@ -40,7 +40,8 @@
             "args": [
                 "--test-dir",
                 "build",
-                "--output-on-failure"
+                "--output-on-failure",
+                "-R", "${input:testTarget}"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -48,6 +49,14 @@
             "problemMatcher": [
                 "$gcc"
             ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
             "group": "build",
             "dependsOn": [
                 "build"
@@ -90,6 +99,19 @@
                 "clear": true
             },
             "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "testTarget",
+            "type": "pickString",
+            "description": "test target to run",
+            "default": "",
+            "options": [
+                "",
+                "evq",
+                "evq_log"
+            ]
         }
     ],
     "version": "2.0.0"

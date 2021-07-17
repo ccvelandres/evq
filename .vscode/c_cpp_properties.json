@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/",
                 "${workspaceFolder}/build/",
+                "${workspaceFolder}/src/",
                 "${workspaceFolder}/src/include/",
                 "${workspaceFolder}/src/include/evq",
                 "${workspaceFolder}/build/_deps/googletest-src/googletest/include",

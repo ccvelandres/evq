@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "evq_sample",
+            "name": "example",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/examples/${input:sampleTarget}",
@@ -35,6 +35,15 @@
             "preLaunchTask": "build"
         },
         {
+            "name": "test_evq_log",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/test_evq_log",
+            "args": [],
+            "cwd": "${workspaceFolder}/build",
+            "preLaunchTask": "build"
+        },
+        {
             "name": "example/stm32f411",
             "type": "cortex-debug",
             "request": "launch",
@@ -52,7 +61,8 @@
             "type": "pickString",
             "description": "Pick sample target to run and debug",
             "options": [
-                "evq_sample_direct"
+                "evq_sample_direct",
+                "evq_sample_event"
             ],
             "default": "evq_sample_direct"
         }
