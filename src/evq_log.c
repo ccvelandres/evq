@@ -16,6 +16,7 @@ void            evq_log_set_level(const evq_log_level_t level) { evq_log_level =
 void __attribute__((weak)) evq_log(evq_log_level_t level, const char *fmt, ...)
 {
     // override this function
+    if (evq_log_level < level) return;
 
     va_list  args;
     char    *buf = NULL;
@@ -42,7 +43,8 @@ void __attribute__((weak))
 evq_assert(const char *condstr, const char *file, int line, const char *str)
 {
     // override this function
-    while(1);
+    while (1)
+        ;
 }
 
 #endif

@@ -48,10 +48,10 @@ extern "C" void evq_free(void *ptr)
     Mock_EVQ_PORT::instance->evq_free(ptr);
 }
 
-extern "C" uint32_t evq_flush_log(const char *str, uint32_t len)
+extern "C" void evq_log(evq_log_level_t level, const char *fmt, ...)
 {
     // do nothing for logs
-    return 0;
+    return;
 }
 
 extern "C" void evq_assert(const char *condstr, const char *file, int line, const char *str)

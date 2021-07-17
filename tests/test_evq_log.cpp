@@ -27,6 +27,8 @@ public:
     ~Mock_EVQ_LOG() { Mock_EVQ_LOG::instance = nullptr; }
 
     MOCK_METHOD(uint32_t, evq_flush_log, (const char *, uint32_t));
+    MOCK_METHOD(void *, evq_malloc, (uint32_t));
+    MOCK_METHOD(void, evq_free, (void *));
 };
 
 Mock_EVQ_LOG *Mock_EVQ_LOG::instance = NULL;
@@ -41,6 +43,26 @@ extern "C" uint32_t evq_flush_log(const char *str, uint32_t len)
     return Mock_EVQ_LOG::instance->evq_flush_log(str, len);
 }
 
+extern "C" void *evq_malloc(uint32_t size)
+{
+    if (NULL == Mock_EVQ_LOG::instance)
+    {
+        ADD_FAILURE() << "Mock_EVQ_LOG::instance == NULL";
+        return NULL;
+    }
+    return Mock_EVQ_LOG::instance->evq_malloc(size);
+}
+
+extern "C" void evq_free(void *ptr)
+{
+    if (NULL == Mock_EVQ_LOG::instance)
+    {
+        ADD_FAILURE() << "Mock_EVQ_LOG::instance == NULL";
+        return;
+    }
+    Mock_EVQ_LOG::instance->evq_free(ptr);
+}
+
 extern "C" void evq_assert(const char *condstr,
                            const char *file,
                            int         line,
@@ -53,7 +75,7 @@ extern "C" void evq_assert(const char *condstr,
 class F_evq_log : public ::testing::Test
 {
 public:
-    Mock_EVQ_LOG mock_evq_log;
+    StrictMock<Mock_EVQ_LOG> mock_evq_log;
 
     F_evq_log() {}
     ~F_evq_log() {}
@@ -65,6 +87,7 @@ public:
 TEST_F(F_evq_log, log_level)
 {
     evq_log_level_t level;
+    char printBuffer[1024] = {};
 
     EXPECT_EQ(EVQ_LOG_LEVEL, evq_log_get_level());
     evq_log_set_level(EVQ_LOG_LEVEL_DEBUG);
@@ -83,6 +106,8 @@ TEST_F(F_evq_log, log_level)
     // LEVEL - INFO
     evq_log_set_level(EVQ_LOG_LEVEL_INFO);
     EXPECT_CALL(mock_evq_log, evq_flush_log(_, _)).Times(4);
+    EXPECT_CALL(mock_evq_log, evq_malloc(_)).Times(4).WillRepeatedly(Return(printBuffer));
+    EXPECT_CALL(mock_evq_log, evq_free(printBuffer)).Times(4);
     EXPECT_NO_THROW(evq_log(EVQ_LOG_LEVEL_ASSERTION, "this should print"));
     EXPECT_NO_THROW(evq_log(EVQ_LOG_LEVEL_ERROR, "this should print"));
     EXPECT_NO_THROW(evq_log(EVQ_LOG_LEVEL_WARNING, "this should print"));
@@ -93,25 +118,32 @@ TEST_F(F_evq_log, log_level)
 
 TEST_F(F_evq_log, format)
 {
+    char printBuffer[1024] = {};
     evq_log_set_level(EVQ_LOG_LEVEL_TRACE);
 
     // Format - String
+    EXPECT_CALL(mock_evq_log, evq_malloc(_)).Times(1).WillRepeatedly(Return(printBuffer));
+    EXPECT_CALL(mock_evq_log, evq_free(printBuffer)).Times(1);
     EXPECT_CALL(mock_evq_log, evq_flush_log(StrEq("test"), strlen("test") + 1)).Times(1);
     EXPECT_NO_THROW(evq_log(EVQ_LOG_LEVEL_ERROR, "%s", "test"));
-    // Format - Integer
+    // Format - Intege
+    EXPECT_CALL(mock_evq_log, evq_malloc(_)).Times(1).WillRepeatedly(Return(printBuffer));
+    EXPECT_CALL(mock_evq_log, evq_free(printBuffer)).Times(1);
     EXPECT_CALL(mock_evq_log, evq_flush_log(StrEq("5"), strlen("5") + 1)).Times(1);
     EXPECT_NO_THROW(evq_log(EVQ_LOG_LEVEL_ERROR, "%d", 5));
 
     // Prefix Test
-    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr("ERROR:"), _)).Times(1);
+    EXPECT_CALL(mock_evq_log, evq_malloc(_)).Times(5).WillRepeatedly(Return(printBuffer));
+    EXPECT_CALL(mock_evq_log, evq_free(printBuffer)).Times(5);
+    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr(EVQ_LOG_SYM_ERROR), _)).Times(1);
     EXPECT_NO_THROW(EVQ_LOG_ERROR("test"));
-    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr("WARNING:"), _)).Times(1);
+    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr(EVQ_LOG_SYM_WARNING), _)).Times(1);
     EXPECT_NO_THROW(EVQ_LOG_WARNING("test"));
-    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr("INFO:"), _)).Times(1);
+    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr(EVQ_LOG_SYM_INFO), _)).Times(1);
     EXPECT_NO_THROW(EVQ_LOG_INFO("test"));
-    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr("DEBUG:"), _)).Times(1);
+    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr(EVQ_LOG_SYM_DEBUG), _)).Times(1);
     EXPECT_NO_THROW(EVQ_LOG_DEBUG("test"));
-    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr("TRACE:"), _)).Times(1);
+    EXPECT_CALL(mock_evq_log, evq_flush_log(HasSubstr(EVQ_LOG_SYM_TRACE), _)).Times(1);
     EXPECT_NO_THROW(EVQ_LOG_TRACE("test"));
 }
 
