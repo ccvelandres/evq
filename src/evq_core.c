@@ -10,6 +10,8 @@
 #include <evq/evq_config.h>
 #include <evq/evq_core_p.h>
 
+#include <evq/evq_event.h>
+#include <evq/evq_event_p.h>
 /**
  * @file src/evq_core.c
  */
@@ -21,18 +23,6 @@
 ////////////////////////////////////////////////////////////////////
 // Type declarations
 ////////////////////////////////////////////////////////////////////
-
-typedef struct
-{
-    evq_core_state_t state;
-#if defined(EVQ_RTOS_SUPPORT)
-    evq_mutex_t mutex;
-#endif
-    evq_stream_t      *se_stream;
-    evq_egroup_t       se_egroup;
-    uint16_t           handleCount;
-    evq_handle_priv_t *handles[EVQ_MAX_HANDLES];
-} evq_context_t;
 
 // static_assert(sizeof(evq_handle_priv_t) != sizeof(evq_static_handle_t),
 //               "Mismatched static buffer size for evq_handle_t");
@@ -61,10 +51,9 @@ evq_context_t g_context = {
  * @return pointer to handle with matching id,
  *          NULL if no matching id
  */
-static evq_handle_t evq_priv_lookup_handle_with_id(evq_id_t handleId)
+static evq_handle_t evq_priv_lookup_handle_with_id(evq_context_t *ctx, evq_id_t handleId)
 {
     evq_handle_t   ret = NULL;
-    evq_context_t *ctx = &g_context;
 
     for (uint16_t i = 0; (NULL == ret) && (i < EVQ_MAX_HANDLES); ++i)
     {
@@ -84,10 +73,10 @@ static evq_handle_t evq_priv_lookup_handle_with_id(evq_id_t handleId)
  * @param[in] privHandle handle to add
  * @return true if handle was added, else false
  */
-static bool evq_priv_add_handle(evq_handle_priv_t *privHandle)
+static bool evq_priv_add_handle(evq_context_t *ctx, evq_handle_priv_t *privHandle)
 {
     bool           added = false;
-    evq_context_t *ctx   = &g_context;
+
     for (uint16_t i = 0; (!added) && (i < EVQ_MAX_HANDLES); ++i)
     {
         if (NULL == ctx->handles[i])
@@ -108,10 +97,9 @@ static bool evq_priv_add_handle(evq_handle_priv_t *privHandle)
  * @param[in] privHandle handle to remove
  * @return true if handle was removed, else false
  */
-static bool evq_priv_remove_handle(const evq_handle_priv_t *privHandle)
+static bool evq_priv_remove_handle(evq_context_t *ctx, const evq_handle_priv_t *privHandle)
 {
     bool           removed = false;
-    evq_context_t *ctx     = &g_context;
 
     for (uint16_t i = 0; (!removed) && (i < EVQ_MAX_HANDLES); ++i)
     {
@@ -174,15 +162,15 @@ static evq_status_t evq_priv_handle_destroy(evq_handle_priv_t *privHandle)
  * @param[in] privHandle handle to register
  * @return EVQ_ERROR_NONE on success
  */
-static evq_status_t evq_priv_register_handle(evq_handle_priv_t *privHandle)
+static evq_status_t evq_priv_register_handle(evq_context_t *ctx, evq_se_msg_hdl_t *msg)
 {
-    evq_status_t   st  = EVQ_ERROR_NONE;
-    evq_context_t *ctx = &g_context;
+    evq_status_t   st  = EVQ_ERROR_MUTEX;
+    evq_handle_priv_t *privHandle = msg->handle;
 
-    if (EVQ_ERROR_NONE == evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT))
+    if (EVQ_ERROR_NONE == (st = evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT)))
     {
-        if (NULL == evq_priv_lookup_handle_with_id(privHandle->handleId)
-            && (evq_priv_add_handle(privHandle)))
+        if (NULL == evq_priv_lookup_handle_with_id(ctx, privHandle->handleId)
+            && (evq_priv_add_handle(ctx, privHandle)))
         {
             privHandle->isRegistered = true;
             EVQ_LOG_TRACE("Registered handle(%X)\n", privHandle->handleId);
@@ -201,14 +189,14 @@ static evq_status_t evq_priv_register_handle(evq_handle_priv_t *privHandle)
  * @param[in] privHandle handle to unregister
  * @return EVQ_ERROR_NONE on success
  */
-static evq_status_t evq_priv_unregister_handle(evq_handle_priv_t *privHandle)
+static evq_status_t evq_priv_unregister_handle(evq_context_t *ctx, evq_se_msg_hdl_t *msg)
 {
-    evq_status_t   st  = EVQ_ERROR_NONE;
-    evq_context_t *ctx = &g_context;
+    evq_status_t   st  = EVQ_ERROR_MUTEX;
+    evq_handle_priv_t *privHandle = msg->handle;
 
-    if (EVQ_ERROR_NONE == evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT))
+    if (EVQ_ERROR_NONE == (st = evq_mutex_lock(ctx->mutex, EVQ_CORE_TIMEOUT)))
     {
-        if (evq_priv_remove_handle(privHandle))
+        if (evq_priv_remove_handle(ctx, privHandle))
         {
             privHandle->isRegistered = false;
             EVQ_LOG_TRACE("Unregistered handle(%X)\n", privHandle->handleId);
@@ -223,41 +211,6 @@ static evq_status_t evq_priv_unregister_handle(evq_handle_priv_t *privHandle)
     return st;
 }
 
-static evq_status_t evq_se_handler_hdl_ctrl(evq_se_msg_hdl_t *msg)
-{
-    evq_status_t st = EVQ_ERROR_NONE;
-
-    switch (msg->type)
-    {
-    case EVQ_SE_MSG_HDL_REGISTER:
-        st = evq_priv_register_handle(msg->handle);
-        break;
-    case EVQ_SE_MSG_HDL_UNREGISTER:
-        st = evq_priv_unregister_handle(msg->handle);
-        break;
-    default:
-        EVQ_LOG_TRACE("Unhandled se_hdl_ctrl message type: %u\n", msg->type);
-        break;
-    }
-
-    return st;
-}
-
-static evq_status_t evq_se_handler_evt(evq_se_msg_evt_t *msg)
-{
-    evq_status_t st = EVQ_ERROR_NONE;
-    switch (msg->type)
-    {
-    case EVQ_SE_MSG_EVT_POST:
-
-        break;
-    default:
-        EVQ_LOG_TRACE("Unhandled st_evt message type: %u\n", msg->type);
-        break;
-    }
-    return st;
-}
-
 static evq_status_t evq_se_handle_ctrl_msg(evq_context_t *ctx)
 {
     evq_status_t       st = 0;
@@ -267,11 +220,14 @@ static evq_status_t evq_se_handle_ctrl_msg(evq_context_t *ctx)
     {
         switch (cMsg.msgType)
         {
-        case EVQ_SE_HDL_CTRL:
-            (void)evq_se_handler_hdl_ctrl(&cMsg.msg.hdl);
+        case EVQ_SE_MSG_HDL_REGISTER:
+            (void)evq_priv_register_handle(ctx, &cMsg.msg.hdl_register);
             break;
-        case EVQ_SE_EVT_CTRL:
-            (void)evq_se_handler_evt(&cMsg.msg.evt);
+        case EVQ_SE_MSG_HDL_UNREGISTER:
+            (void)evq_priv_unregister_handle(ctx, &cMsg.msg.hdl_unregister);
+            break;
+        case EVQ_SE_MSG_EVT_POST:
+            (void) evq_event_process(ctx, &cMsg);
             break;
         default:
             break;
@@ -306,7 +262,7 @@ static evq_status_t evq_se_handle_route_msg(evq_context_t *ctx)
             continue;
         }
 
-        dstHandle = evq_priv_lookup_handle_with_id(seMsg->dstId);
+        dstHandle = evq_priv_lookup_handle_with_id(ctx, seMsg->dstId);
         if (NULL == dstHandle)
         {
             // destination not found
@@ -499,9 +455,8 @@ evq_status_t evq_handle_register(evq_handle_t *handle, const evq_handle_config_t
     {
         // Send the register command to se stream
         evq_core_message_t cMsg;
-        cMsg.msgType        = EVQ_SE_HDL_CTRL;
-        cMsg.msg.hdl.type   = EVQ_SE_MSG_HDL_REGISTER;
-        cMsg.msg.hdl.handle = privHandle;
+        cMsg.msgType                 = EVQ_SE_MSG_HDL_REGISTER;
+        cMsg.msg.hdl_register.handle = privHandle;
 
         st = evq_se_send_msg(&cMsg);
         if (EVQ_ERROR_NONE != st)
@@ -542,9 +497,8 @@ evq_status_t evq_handle_unregister(evq_handle_t *handle)
     if (privHandle->isRegistered)
     {
         evq_core_message_t cMsg;
-        cMsg.msgType        = EVQ_SE_HDL_CTRL;
-        cMsg.msg.hdl.type   = EVQ_SE_MSG_HDL_UNREGISTER;
-        cMsg.msg.hdl.handle = privHandle;
+        cMsg.msgType                   = EVQ_SE_MSG_HDL_UNREGISTER;
+        cMsg.msg.hdl_unregister.handle = privHandle;
 
         st = evq_se_send_msg(&cMsg);
         if (EVQ_ERROR_NONE != st)

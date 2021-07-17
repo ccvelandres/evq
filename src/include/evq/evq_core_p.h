@@ -68,30 +68,18 @@ extern "C"
     typedef enum
     {
         EVQ_SE_UNINITIALIZED,
-        EVQ_SE_HDL_CTRL,
-        EVQ_SE_EVT_CTRL,
-    } evq_se_msg_type_t;
-
-    typedef enum
-    {
         EVQ_SE_MSG_HDL_REGISTER,
-        EVQ_SE_MSG_HDL_UNREGISTER
-    } evq_msg_type_hdl_ctrl_t;
+        EVQ_SE_MSG_HDL_UNREGISTER,
+        EVQ_SE_MSG_EVT_POST,
+    } evq_se_msg_type_t;
 
     typedef struct
     {
-        evq_msg_type_hdl_ctrl_t type;
         evq_handle_priv_t      *handle;
     } evq_se_msg_hdl_t;
 
-    typedef enum
-    {
-        EVQ_SE_MSG_EVT_POST
-    } evq_msg_type_evt_t;
-
     typedef struct
     {
-        evq_msg_type_evt_t type;
         evq_id_t           srcId;
         evq_id_t           evtId;
     } evq_se_msg_evt_t;
@@ -101,10 +89,26 @@ extern "C"
         evq_se_msg_type_t msgType;
         union
         {
-            evq_se_msg_hdl_t hdl;
-            evq_se_msg_evt_t evt;
+            evq_se_msg_hdl_t hdl_register;
+            evq_se_msg_hdl_t hdl_unregister;
+            evq_se_msg_evt_t evt_post;
         } msg;
     } evq_core_message_t;
+    
+    /**
+     * Structure containing all control data for evq instance
+    */
+    typedef struct
+    {
+        evq_core_state_t state;
+    #if defined(EVQ_RTOS_SUPPORT)
+        evq_mutex_t mutex;
+    #endif
+        evq_stream_t      *se_stream;
+        evq_egroup_t       se_egroup;
+        uint16_t           handleCount;
+        evq_handle_priv_t *handles[EVQ_MAX_HANDLES];
+    } evq_context_t;
 
    /**
      * @brief Sends se messages for processing

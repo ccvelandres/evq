@@ -14,6 +14,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define EVQ_TIMEOUT_MAX 0xFFFFFFFF
 
@@ -40,8 +41,6 @@ extern "C"
     } evq_status_t;
 
     typedef uint16_t evq_id_t;
-
-    typedef evq_status_t (*evq_event_handler_t)(evq_id_t srcId, evq_id_t eventId);
 
     typedef struct
     {
