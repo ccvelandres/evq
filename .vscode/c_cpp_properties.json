@@ -10,8 +10,7 @@
                 "${workspaceFolder}/build/_deps/googletest-src/googletest/include",
                 "${workspaceFolder}/build/_deps/googletest-src/googlemock/include"
             ],
-            "defines": [
-            ],
+            "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c99",
             "cppStandard": "c++17",
@@ -25,16 +24,41 @@
                 "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/include",
                 "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/portable/GCC/ARM_CM4F",
                 "${workspaceFolder}/examples/stm32f411/build/",
+                "${workspaceFolder}/src/include/"
+            ],
+            "defines": [
+                "STM32F4",
+            ],
+            "compileCommands": "${workspaceFolder}/examples/stm32f411/build/compile_commands.json",
+            "compilerPath": "/bin/arm-none-eabi-gcc",
+            "cStandard": "c99",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
+        },
+        {
+            "name": "example/stm32f411-keilrtx",
+            "includePath": [
+                "${workspaceFolder}/examples/stm32f411-keilrtx/src",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/libopencm3/include",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/cmsis_5/CMSIS/Core/Include",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/cmsis_5/CMSIS/RTOS2/Include",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/cmsis_5/CMSIS/RTOS2/RTX/Include",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/cmsis_5/CMSIS/RTOS2/RTX/Config",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/external/cmsis_5/Device/ARM/ARMCM4/Include",
+                "${workspaceFolder}/examples/stm32f411-keilrtx/build/",
                 "${workspaceFolder}/src/include/",
             ],
             "defines": [
-                "STM32F4"
+                "STM32F4",
+                "-DARMCM4_FP",
+                "-DCMSIS_device_header=\"ARMCM4_FP.h\"",
+                "D__ARM_ARCH_7EM__=1"
             ],
             "compileCommands": "${workspaceFolder}/examples/stm32f411/build/compile_commands.json",
-            "compilerPath": "D:/msys64/ucrt64/bin/arm-none-eabi-gcc.exe",
+            "compilerPath": "/bin/arm-none-eabi-gcc",
             "cStandard": "c99",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "gcc-arm"
         },
     ],
     "version": 4
