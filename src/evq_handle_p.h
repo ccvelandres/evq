@@ -16,7 +16,7 @@ extern "C"
 #include <stdint.h>
 #include <evq/evq_types.h>
 #include <evq/evq_port.h>
-#include <evq/evq_core_p.h>
+#include <evq_core_p.h>
 
 /**
  * @brief Perform handle lookup for matching id.

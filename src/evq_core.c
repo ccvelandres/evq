@@ -8,13 +8,13 @@
 #include <evq/evq_port.h>
 #include <evq/evq_stream.h>
 #include <evq/evq_config.h>
-#include <evq/evq_core_p.h>
+#include <evq_core_p.h>
 
 #include <evq/evq_handle.h>
-#include <evq/evq_handle_p.h>
+#include <evq_handle_p.h>
 
 #include <evq/evq_event.h>
-#include <evq/evq_event_p.h>
+#include <evq_event_p.h>
 /**
  * @file src/evq_core.c
  */

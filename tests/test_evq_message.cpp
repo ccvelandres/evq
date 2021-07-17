@@ -4,7 +4,6 @@
 
 #include "mocks/mock_evq_port.hpp"
 
-#include <evq/evq_core_p.h>
 #include <evq/evq_message.h>
 
 using ::testing::_;

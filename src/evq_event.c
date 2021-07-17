@@ -3,7 +3,7 @@
 
 #include <evq/evq_log.h>
 #include <evq/evq_event.h>
-#include <evq/evq_core_p.h>
+#include <evq_core_p.h>
 
 static void evq_priv_event_post(evq_context_t *ctx, const evq_se_msg_evt_t *eMsg)
 {

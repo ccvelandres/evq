@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include <evq/evq_core_p.h>
+#include <evq_core_p.h>
 #include <evq/evq_port.h>
 #include <evq/evq_log.h>
 #include <evq/evq_message.h>

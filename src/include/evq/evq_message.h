@@ -15,7 +15,6 @@ extern "C"
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <evq/evq_core.h>
 #include <evq/evq_types.h>
 
     typedef struct zEVQ_MSG_PRIV

@@ -2,12 +2,12 @@
 #include <string.h>
 
 #include <evq/evq_core.h>
-#include <evq/evq_core_p.h>
+#include <evq_core_p.h>
 #include <evq/evq_config.h>
 #include <evq/evq_port.h>
 #include <evq/evq_log.h>
 
-#include <evq/evq_handle_p.h>
+#include <evq_handle_p.h>
 
 ////////////////////////////////////////////////////////////////////
 // Private Functions
