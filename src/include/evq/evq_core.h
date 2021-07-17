@@ -18,25 +18,7 @@ extern "C"
 #include <evq/evq_types.h>
 #include <evq/evq_message.h>
 #include <evq/evq_event.h>
-
-    typedef struct
-    {
-        uint8_t dummy[20];
-    } evq_static_handle_t;
-
-    typedef void *evq_handle_t;
-
-    typedef struct
-    {
-        const char         *handleName;
-        evq_id_t            handleId;
-        uint32_t            streamSize;
-        evq_event_handler_t eventHandler;
-    } evq_handle_config_t;
-
-    /** @brief Allocate evq handle */
-    evq_status_t evq_handle_register(evq_handle_t *handle, const evq_handle_config_t *config);
-    evq_status_t evq_handle_unregister(evq_handle_t *handle);
+#include <evq/evq_handle.h>
 
     /** @brief Send message */
     evq_status_t evq_send(evq_handle_t  handle,

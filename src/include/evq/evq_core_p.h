@@ -17,10 +17,10 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 #include <evq/evq_types.h>
+#include <evq/evq_port.h>
 #include <evq/evq_core.h>
 #include <evq/evq_message.h>
 #include <evq/evq_stream.h>
-#include <evq/evq_handle_p.h>
 
     typedef enum
     {
@@ -68,20 +68,22 @@ extern "C"
     typedef enum
     {
         EVQ_SE_UNINITIALIZED,
-        EVQ_SE_MSG_HDL_REGISTER,
-        EVQ_SE_MSG_HDL_UNREGISTER,
-        EVQ_SE_MSG_EVT_POST,
+        EVQ_SE_MSG_EVT            = (1 << 29),
+        EVQ_SE_MSG_EVT_POST       = (EVQ_SE_MSG_EVT | (0x00)),
+        EVQ_SE_MSG_HDL            = (1 << 31),
+        EVQ_SE_MSG_HDL_REGISTER   = (EVQ_SE_MSG_HDL | (0x00)),
+        EVQ_SE_MSG_HDL_UNREGISTER = (EVQ_SE_MSG_HDL | (0x01)),
     } evq_se_msg_type_t;
 
     typedef struct
     {
-        evq_handle_priv_t      *handle;
+        evq_handle_priv_t *handle;
     } evq_se_msg_hdl_t;
 
     typedef struct
     {
-        evq_id_t           srcId;
-        evq_id_t           evtId;
+        evq_id_t srcId;
+        evq_id_t evtId;
     } evq_se_msg_evt_t;
 
     typedef struct
@@ -94,23 +96,23 @@ extern "C"
             evq_se_msg_evt_t evt_post;
         } msg;
     } evq_core_message_t;
-    
+
     /**
      * Structure containing all control data for evq instance
-    */
+     */
     typedef struct
     {
         evq_core_state_t state;
-    #if defined(EVQ_RTOS_SUPPORT)
+#if defined(EVQ_RTOS_SUPPORT)
         evq_mutex_t mutex;
-    #endif
+#endif
         evq_stream_t      *se_stream;
         evq_egroup_t       se_egroup;
         uint16_t           handleCount;
         evq_handle_priv_t *handles[EVQ_MAX_HANDLES];
     } evq_context_t;
 
-   /**
+    /**
      * @brief Sends se messages for processing
      *
      * Sends @p cMsg by copy.

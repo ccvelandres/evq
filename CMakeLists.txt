@@ -35,6 +35,7 @@ configure_file(evq_config.h.in evq/evq_config.h @ONLY)
 
 add_library(evq
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_core.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/evq_handle.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_log.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_stream.c
     ${CMAKE_CURRENT_LIST_DIR}/src/evq_event.c
@@ -46,6 +47,7 @@ target_include_directories(evq PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_include_directories(evq PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/include/evq>)
 
 # Print options
