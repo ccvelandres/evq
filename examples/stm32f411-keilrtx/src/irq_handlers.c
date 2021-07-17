@@ -1,4 +1,5 @@
 
+#include <stdint.h>
 
 extern void SVC_Handler();
 extern void PendSV_Handler();

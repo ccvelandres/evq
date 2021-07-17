@@ -1,4 +1,5 @@
 #include "board.h"
+#include "usb.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/flash.h>
@@ -14,7 +15,13 @@
  *
  */
 
-void setupClocks(void) { rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]); }
+uint32_t SystemCoreClock;
+
+void setupClocks(void)
+{
+    rcc_clock_setup_pll(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
+    SystemCoreClock = rcc_ahb_frequency;
+}
 
 void setupGpio(void)
 {
