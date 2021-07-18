@@ -60,7 +60,4 @@ void setupBoard()
     setupUsb();
     setupHeartbeat();
     setupLog();
-
-    while (!usb_serial_ready())
-        ;
 }

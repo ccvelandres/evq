@@ -3,6 +3,7 @@
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/usart.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
@@ -13,6 +14,7 @@
 
 #include "board.h"
 #include "usb.h"
+#include "profiler.h"
 
 #define EVQ_TASK_STACK_SIZE 1024
 
@@ -131,13 +133,21 @@ void evqClientTaskFunction(void *pxArg)
 
 void evqCoreTaskFunction(void *pxArg)
 {
-    for (;;) evq_process();
+    for (;;) {
+        evq_process();
+        if(xTaskGetTickCount() > pdMS_TO_TICKS(5000))
+        {
+            cyg_profiler_end();
+        }
+    }
 }
 
 int main(void)
 {
     setupBoard();
 
+    cyg_profiler_init();
+    cyg_profiler_start();
     evq_status_t st = evq_init();
     configASSERT(st == EVQ_ERROR_NONE);
 
