@@ -44,16 +44,16 @@
             "preLaunchTask": "build"
         },
         {
-            "name": "example/stm32f411",
+            "name": "example/stm32f411-freertos",
             "type": "cortex-debug",
             "request": "launch",
             "servertype": "bmp",
             "BMPGDBSerialPort": "com5",
             "interface": "swd",
             "powerOverBMP": "disable",
-            "svdFile": "${workspaceFolder}/examples/stm32f411/stm32f411.svd",
-            "executable": "${workspaceFolder}/examples/stm32f411/build/evq_example_stm32f411",
-            "cwd": "${workspaceFolder}/examples/stm32f411/",
+            "svdFile": "stm32f411.svd",
+            "executable": "build/evq_example_stm32f411",
+            "cwd": "${workspaceFolder}/examples/stm32f411-freertos/",
         }
     ],"inputs": [
         {

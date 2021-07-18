@@ -82,7 +82,7 @@
             }
         },
         {
-            "label": "dfu-util-stm32f411",
+            "label": "dfu-util-stm32f411-freertos",
             "type": "shell",
             "command": "dfu-util",
             "args": [
@@ -92,7 +92,7 @@
                 "-D", "build/evq_example_stm32f411.bin"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/examples/stm32f411"
+                "cwd": "${workspaceFolder}/examples/stm32f411-freertos"
             },
             "group": "none",
             "presentation": {

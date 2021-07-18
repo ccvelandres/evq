@@ -18,13 +18,13 @@
             "intelliSenseMode": "linux-gcc-x64"
         },
         {
-            "name": "example/stm32f411",
+            "name": "example/stm32f411-freertos",
             "includePath": [
-                "${workspaceFolder}/examples/stm32f411/src",
-                "${workspaceFolder}/examples/stm32f411/external/libopencm3/include",
-                "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/include",
-                "${workspaceFolder}/examples/stm32f411/external/freertos_kernel/portable/GCC/ARM_CM4F",
-                "${workspaceFolder}/examples/stm32f411/build/",
+                "${workspaceFolder}/examples/stm32f411-freertos/src",
+                "${workspaceFolder}/examples/stm32f411-freertos/external/libopencm3/include",
+                "${workspaceFolder}/examples/stm32f411-freertos/external/freertos_kernel/include",
+                "${workspaceFolder}/examples/stm32f411-freertos/external/freertos_kernel/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/examples/stm32f411-freertos/build/",
                 "${workspaceFolder}/src/include/"
             ],
             "defines": [
