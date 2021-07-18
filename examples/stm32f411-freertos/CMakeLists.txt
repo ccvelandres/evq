@@ -78,6 +78,7 @@ set(EVQ_LOG_LEVEL_MAX 5)
 set(EVQ_CORE_TIMEOUT EVQ_TIMEOUT_MAX)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../ ${CMAKE_CURRENT_BINARY_DIR}/_deps/evq)
 target_link_libraries(evq PRIVATE libopencm3_stm32f4)
+target_compile_options(evq PRIVATE -finstrument-functions)
 
 #########################################################################
 # evq_example_stm32f411
@@ -88,6 +89,7 @@ add_executable(evq_example_stm32f411
     ${CMAKE_CURRENT_LIST_DIR}/src/freertos_hooks.c
     ${CMAKE_CURRENT_LIST_DIR}/src/retarget.c
     ${CMAKE_CURRENT_LIST_DIR}/src/board.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/profiler.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_egroup.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_memory.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_mutex.c
