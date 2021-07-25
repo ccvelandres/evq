@@ -8,24 +8,23 @@
 #include <libopencm3/stm32/dbgmcu.h>
 #include <libopencm3/stm32/rcc.h>
 
-#define ITM_BAUDRATE 230400
+#define ITM_BAUDRATE 2000000
 
-void inline itm_put8(uint32_t channel, uint8_t ch)
+__attribute__((no_instrument_function)) void inline itm_put8(uint32_t channel, uint8_t ch)
 {
     while (!(ITM_STIM8(0) & ITM_STIM_FIFOREADY))
         ;
     ITM_STIM8(channel) = ch;
 }
 
-void inline itm_put32(uint32_t channel, uint32_t ch)
+__attribute__((no_instrument_function)) void inline itm_put32(uint32_t channel, uint32_t ch)
 {
     while (!(ITM_STIM8(0) & ITM_STIM_FIFOREADY))
         ;
     ITM_STIM32(channel) = ch;
 }
 
-__attribute__((no_instrument_function))
-void cyg_profiler_init_itm()
+__attribute__((no_instrument_function)) void __cyg_profiler_init_itm()
 {
     // configure trace swo
     rcc_periph_clock_enable(RCC_GPIOB);
@@ -35,21 +34,21 @@ void cyg_profiler_init_itm()
 
     // use ahb assuming sysclk == ahb freq
     TPIU_ACPR  = ((rcc_ahb_frequency + ITM_BAUDRATE / 2) / ITM_BAUDRATE);
-    TPIU_CSPSR = 1;
-    TPIU_SPPR  = TPIU_SPPR_ASYNC_MANCHESTER; // Use manchester encoding
-    TPIU_FFCR  = 0;                          // disable formatting
+    TPIU_CSPSR = 1;                   // port size: 1 bit
+    TPIU_SPPR  = TPIU_SPPR_ASYNC_NRZ; // Use manchester encoding
+    TPIU_FFCR  = 0x100;               // disable formatting
 
     // Unlock ITM
     ITM_LAR    = CORESIGHT_LAR_KEY;
     ITM_TCR    = ITM_TCR_ITMENA | ITM_TCR_SYNCENA | (1 << 16);
     ITM_TPR    = 0xF;  // enable unpriv access
-    ITM_TER[0] = 0xFF; // enable 0:7 stimulus ports
+    ITM_TER[0] = 0x3F; // enable stimulus ports 0
 
     // configure dwt if needed
+    DWT_CTRL = 0x400003FE; // disable sync packets
 }
 
-__attribute__((no_instrument_function))
-bool cyg_profiler_flush_itm(void *ptr, uint16_t len)
+__attribute__((no_instrument_function)) bool __cyg_profiler_flush_itm(void *ptr, uint16_t len)
 {
     uint8_t *data      = ptr;
     uint8_t *end       = ((uint8_t *)ptr) + len;
@@ -71,10 +70,11 @@ bool cyg_profiler_flush_itm(void *ptr, uint16_t len)
     return true;
 }
 
-__attribute__((no_instrument_function))
-void cyg_profiler_store_itm(unsigned int is_enter, void *this_fn, void *call_site)
+__attribute__((no_instrument_function)) void __cyg_profiler_store_itm(unsigned int is_enter,
+                                                                      void        *this_fn,
+                                                                      void        *call_site)
 {
-    unsigned int active_isr = cyg_get_active_isr();
+    unsigned int active_isr = __cyg_get_active_isr();
     // we don't really store entries with itm, can just push to fifo
 
     // TSDL header for 16 bit packet header [0] = enter, [1] = exit
@@ -83,17 +83,17 @@ void cyg_profiler_store_itm(unsigned int is_enter, void *this_fn, void *call_sit
 
     // Push sequence should follow struct format
     // 1. Flags
-    itm_put32(0, (is_enter << 0) | ((!!active_isr) << 1));
+    itm_put32(1, (is_enter << 0) | ((!!active_isr) << 1));
     // 2. Thread_id
-    itm_put32(0, active_isr ? active_isr : cyg_get_thread_id());
+    itm_put32(2, active_isr ? active_isr : __cyg_get_thread_id());
     // 3. timestamp
-    itm_put32(0, cyg_get_timestamp());
+    itm_put32(3, __cyg_get_timestamp());
     // 4. this_fn
-    itm_put32(0, (uint32_t)this_fn);
+    itm_put32(4, (uint32_t)this_fn);
     // 4. call_site
-    itm_put32(0, (uint32_t)call_site);
+    itm_put32(5, (uint32_t)call_site);
 }
 
-#pragma weak cyg_profiler_init_flush = cyg_profiler_init_itm
-#pragma weak cyg_profiler_flush      = cyg_profiler_flush_itm
-#pragma weak cyg_profiler_store      = cyg_profiler_store_itm
+#pragma weak __cyg_profiler_init_flush = __cyg_profiler_init_itm
+#pragma weak __cyg_profiler_flush      = __cyg_profiler_flush_itm
+#pragma weak __cyg_profiler_store      = __cyg_profiler_store_itm

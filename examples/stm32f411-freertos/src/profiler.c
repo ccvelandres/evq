@@ -9,7 +9,7 @@
 #include <libopencm3/stm32/gpio.h>
 
 /** The way we make atomic writes is just disabling global interrupts */
-uint32_t inline __lock_profiler()
+__attribute__((no_instrument_function)) uint32_t inline __lock_profiler()
 {
     register uint32_t primask;
     __asm__ volatile("MRS %0, PRIMASK" : "=r"(primask));
@@ -18,20 +18,20 @@ uint32_t inline __lock_profiler()
     return primask;
 }
 
-void inline __unlock_profiler(bool primask)
+__attribute__((no_instrument_function)) void inline __unlock_profiler(bool primask)
 {
     if (primask) __asm__("cpsie i");
 }
 
-static bool                  __cyg_profile_stopped     = true;
-static bool                  __cyg_profile_enabled     = false;
+static bool __cyg_profile_stopped = true;
+static bool __cyg_profile_enabled = false;
 
 __attribute__((no_instrument_function)) void __cyg_profile_func_enter(void *this_fn, void *call_site)
 {
     if (__cyg_profile_enabled)
     {
-        uint32_t     is_locked  = __lock_profiler();
-        cyg_profiler_store(1, this_fn, call_site);
+        uint32_t is_locked = __lock_profiler();
+        __cyg_profiler_store(1, this_fn, call_site);
         __unlock_profiler(is_locked);
     }
 }
@@ -40,29 +40,29 @@ __attribute__((no_instrument_function)) void __cyg_profile_func_exit(void *this_
 {
     if (__cyg_profile_enabled)
     {
-        uint32_t     is_locked  = __lock_profiler();
-        cyg_profiler_store(0, this_fn, call_site);
+        uint32_t is_locked = __lock_profiler();
+        __cyg_profiler_store(0, this_fn, call_site);
         __unlock_profiler(is_locked);
     }
 }
 
-void cyg_profiler_start(void)
+__attribute__((no_instrument_function)) void __cyg_profiler_start(void)
 {
     static uint8_t start_id[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-    cyg_profiler_flush(start_id, sizeof(start_id));
+    __cyg_profiler_flush(start_id, sizeof(start_id));
     __cyg_profile_enabled = true;
     __cyg_profile_stopped = false;
 }
 
-void cyg_profiler_end(void)
+__attribute__((no_instrument_function)) void __cyg_profiler_end(void)
 {
     static uint8_t end_id[] = {0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08};
     __cyg_profile_enabled   = false;
-    if (!__cyg_profile_stopped) __cyg_profile_stopped = cyg_profiler_flush(end_id, sizeof(end_id));
+    if (!__cyg_profile_stopped)
+        __cyg_profile_stopped = __cyg_profiler_flush(end_id, sizeof(end_id));
 }
 
-
-void cyg_profiler_init()
+__attribute__((no_instrument_function)) void __cyg_profiler_init()
 {
     // Init timer for profiler time base
     rcc_periph_clock_enable(RCC_TIM2);
@@ -78,10 +78,10 @@ void cyg_profiler_init()
     nvic_enable_irq(NVIC_TIM2_IRQ);
 
     // init flush method
-    cyg_profiler_init_flush();
+    __cyg_profiler_init_flush();
 }
 
-void tim2_isr(void)
+__attribute__((no_instrument_function)) void tim2_isr(void)
 {
     if (timer_get_flag(TIM2, TIM_SR_UIF))
     {

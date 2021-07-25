@@ -137,7 +137,7 @@ void evqCoreTaskFunction(void *pxArg)
         evq_process();
         if(xTaskGetTickCount() > pdMS_TO_TICKS(5000))
         {
-            cyg_profiler_end();
+            __cyg_profiler_end();
         }
     }
 }
@@ -146,8 +146,8 @@ int main(void)
 {
     setupBoard();
 
-    cyg_profiler_init();
-    cyg_profiler_start();
+    __cyg_profiler_init();
+    __cyg_profiler_start();
     evq_status_t st = evq_init();
     configASSERT(st == EVQ_ERROR_NONE);
 

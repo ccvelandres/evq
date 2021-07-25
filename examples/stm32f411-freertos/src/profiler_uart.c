@@ -13,7 +13,7 @@ static unsigned int          __cyg_profile_buffer_head = 0;
 static __cyg_profile_entry_t __cyg_profile_buffer[__cyg_buffer_size]
     = {[0 ...(__cyg_buffer_size - 1)] = {}};
 
-void cyg_profiler_init_uart(void)
+__attribute__((no_instrument_function)) void __cyg_profiler_init_uart(void)
 {
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_USART1);
@@ -45,7 +45,7 @@ void cyg_profiler_init_uart(void)
     nvic_enable_irq(NVIC_DMA2_STREAM7_IRQ);
 }
 
-bool cyg_profiler_flush_uart(void *ptr, uint16_t len)
+__attribute__((no_instrument_function)) bool __cyg_profiler_flush_uart(void *ptr, uint16_t len)
 {
     // return if busy
     if (DMA2_S7CR & DMA_SxCR_EN) return false;
@@ -59,7 +59,7 @@ bool cyg_profiler_flush_uart(void *ptr, uint16_t len)
     return true;
 }
 
-void dma2_stream7_isr(void)
+__attribute__((no_instrument_function)) void dma2_stream7_isr(void)
 {
     if (dma_get_interrupt_flag(DMA2, DMA_STREAM7, DMA_TCIF))
     {
@@ -83,19 +83,21 @@ __attribute__((no_instrument_function)) static void inline cyg_flush_block_uart(
             size = __cyg_buffer_size - __cyg_profile_flush_head;
         }
 
-        bool flushed = cyg_profiler_flush((void *)&__cyg_profile_buffer[__cyg_profile_flush_head],
-                                          sizeof(__cyg_profile_entry_t) * size);
+        bool flushed = __cyg_profiler_flush((void *)&__cyg_profile_buffer[__cyg_profile_flush_head],
+                                            sizeof(__cyg_profile_entry_t) * size);
         if (flushed)
             __cyg_profile_flush_head = (__cyg_profile_flush_head + size) % __cyg_buffer_size;
     }
 }
 
-void cyg_profiler_store_uart(unsigned int is_enter, void *this_fn, void *call_site)
+__attribute__((no_instrument_function)) void __cyg_profiler_store_uart(unsigned int is_enter,
+                                                                       void        *this_fn,
+                                                                       void        *call_site)
 {
-    unsigned int active_isr = __cyg_get_active_isr();
+    unsigned int active_isr = ____cyg_get_active_isr();
     __cyg_profile_buffer[__cyg_profile_buffer_head].thread_id
-        = active_isr ? active_isr : __cyg_get_thread_id();
-    __cyg_profile_buffer[__cyg_profile_buffer_head].timestamp = __cyg_get_timestamp();
+        = active_isr ? active_isr : ____cyg_get_thread_id();
+    __cyg_profile_buffer[__cyg_profile_buffer_head].timestamp = ____cyg_get_timestamp();
     __cyg_profile_buffer[__cyg_profile_buffer_head].this_fn   = this_fn;
     __cyg_profile_buffer[__cyg_profile_buffer_head].call_site = call_site;
     __cyg_profile_buffer[__cyg_profile_buffer_head].is_enter
@@ -104,6 +106,6 @@ void cyg_profiler_store_uart(unsigned int is_enter, void *this_fn, void *call_si
     cyg_flush_block_uart();
 }
 
-#pragma weak cyg_profiler_init_flush = cyg_profiler_init_uart
-#pragma weak cyg_profiler_flush      = cyg_profiler_flush_uart
-#pragma weak cyg_profiler_store      = cyg_profiler_store_uart
+#pragma weak __cyg_profiler_init_flush = __cyg_profiler_init_uart
+#pragma weak __cyg_profiler_flush      = __cyg_profiler_flush_uart
+#pragma weak __cyg_profiler_store      = __cyg_profiler_store_uart
