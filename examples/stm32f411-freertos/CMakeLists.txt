@@ -90,6 +90,8 @@ add_executable(evq_example_stm32f411
     ${CMAKE_CURRENT_LIST_DIR}/src/retarget.c
     ${CMAKE_CURRENT_LIST_DIR}/src/board.c
     ${CMAKE_CURRENT_LIST_DIR}/src/profiler.c
+    # ${CMAKE_CURRENT_LIST_DIR}/src/profiler_uart.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/profiler_itm.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_egroup.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_memory.c
     ${CMAKE_CURRENT_LIST_DIR}/../../port/freertos/evq_port_mutex.c
