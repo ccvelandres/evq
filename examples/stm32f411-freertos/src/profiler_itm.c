@@ -24,6 +24,7 @@ void inline itm_put32(uint32_t channel, uint32_t ch)
     ITM_STIM32(channel) = ch;
 }
 
+__attribute__((no_instrument_function))
 void cyg_profiler_init_itm()
 {
     // configure trace swo
@@ -47,6 +48,7 @@ void cyg_profiler_init_itm()
     // configure dwt if needed
 }
 
+__attribute__((no_instrument_function))
 bool cyg_profiler_flush_itm(void *ptr, uint16_t len)
 {
     uint8_t *data      = ptr;
@@ -69,15 +71,27 @@ bool cyg_profiler_flush_itm(void *ptr, uint16_t len)
     return true;
 }
 
+__attribute__((no_instrument_function))
 void cyg_profiler_store_itm(unsigned int is_enter, void *this_fn, void *call_site)
 {
-    // we don't really store entries with itm, can just push to fifo
     unsigned int active_isr = cyg_get_active_isr();
-    itm_put32(0, active_isr ? active_isr : cyg_get_thread_id());
-    itm_put32(0, cyg_get_timestamp());
-    itm_put32(0, (uint32_t) this_fn);
-    itm_put32(0, (uint32_t) call_site);
+    // we don't really store entries with itm, can just push to fifo
+
+    // TSDL header for 16 bit packet header [0] = enter, [1] = exit
+    static const uint32_t header[2] = {0x00001fc1, 0x00011fc1};
+    itm_put32(0, header[is_enter ? 1 : 0]);
+
+    // Push sequence should follow struct format
+    // 1. Flags
     itm_put32(0, (is_enter << 0) | ((!!active_isr) << 1));
+    // 2. Thread_id
+    itm_put32(0, active_isr ? active_isr : cyg_get_thread_id());
+    // 3. timestamp
+    itm_put32(0, cyg_get_timestamp());
+    // 4. this_fn
+    itm_put32(0, (uint32_t)this_fn);
+    // 4. call_site
+    itm_put32(0, (uint32_t)call_site);
 }
 
 #pragma weak cyg_profiler_init_flush = cyg_profiler_init_itm

@@ -1,0 +1,36 @@
+trace {
+    major = 1;
+    minor = 8;
+    packet.header := struct {
+        uint16_t magic;
+    };
+};
+
+stream function_profile {
+    id = 31;
+    event.header := struct {
+        uint16_t id;
+    };
+};
+
+event function_profile::enter {
+    attribute = "no_instrument_function";
+    fields := struct {
+        uint32_t flags;
+        uint32_t thread_id;
+        uint32_t timestamp;
+        uint32_t this_fn;
+        uint32_t call_site;
+    };
+};
+
+event function_profile::exit {
+    attribute = "no_instrument_function";
+    fields := struct {
+        uint32_t flags;
+        uint32_t thread_id;
+        uint32_t timestamp;
+        uint32_t this_fn;
+        uint32_t call_site;
+    };
+};
